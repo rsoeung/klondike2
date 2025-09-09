@@ -1,3 +1,5 @@
+
+import 'package:flutter/foundation.dart';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
@@ -7,7 +9,9 @@ import '../pile.dart';
 import 'card.dart';
 
 class TableauPile extends PositionComponent implements Pile {
-  TableauPile({super.position}) : super(size: KlondikeGame.cardSize);
+  TableauPile({super.position}) : super(size: KlondikeGame.cardSize) {
+    debugPrint('TableauPile created at position: [32m$position[0m');
+  }
 
   /// Which cards are currently placed onto this pile.
   final List<Card> _cards = [];
@@ -17,27 +21,34 @@ class TableauPile extends PositionComponent implements Pile {
   //#region Pile API
 
   @override
-  bool canMoveCard(Card card, MoveMethod method) =>
-      card.isFaceUp && (method == MoveMethod.drag || card == _cards.last);
+  bool canMoveCard(Card card, MoveMethod method) {
+    final result = card.isFaceUp && (method == MoveMethod.drag || card == _cards.last);
+    debugPrint('canMoveCard called for card: $card, method: $method, result: $result');
+    return result;
+  }
   // Drag can move multiple cards: tap can move last card only (to Foundation).
 
   @override
   bool canAcceptCard(Card card) {
     if (_cards.isEmpty) {
+      debugPrint('canAcceptCard: pile empty, card rank: ${card.rank.value}');
       return card.rank.value == 13;
     } else {
       final topCard = _cards.last;
-      return card.suit.isRed == !topCard.suit.isRed &&
-          card.rank.value == topCard.rank.value - 1;
+      final result = card.suit.isRed == !topCard.suit.isRed && card.rank.value == topCard.rank.value - 1;
+      debugPrint('canAcceptCard: topCard: $topCard, card: $card, result: $result');
+      return result;
     }
   }
 
   @override
   void removeCard(Card card, MoveMethod method) {
     assert(_cards.contains(card) && card.isFaceUp);
+    debugPrint('removeCard called for card: $card, method: $method');
     final index = _cards.indexOf(card);
     _cards.removeRange(index, _cards.length);
     if (_cards.isNotEmpty && _cards.last.isFaceDown) {
+      debugPrint('removeCard: flipping top card');
       flipTopCard();
       return;
     }
@@ -46,21 +57,24 @@ class TableauPile extends PositionComponent implements Pile {
 
   @override
   void returnCard(Card card) {
-    card.priority = _cards.indexOf(card);
-    layOutCards();
+  debugPrint('returnCard called for card: $card');
+  card.priority = _cards.indexOf(card);
+  layOutCards();
   }
 
   @override
   void acquireCard(Card card) {
-    card.pile = this;
-    card.priority = _cards.length;
-    _cards.add(card);
-    layOutCards();
+  debugPrint('acquireCard called for card: $card');
+  card.pile = this;
+  card.priority = _cards.length;
+  _cards.add(card);
+  layOutCards();
   }
 
   //#endregion
 
   void dropCards(Card firstCard, [List<Card> attachedCards = const []]) {
+    debugPrint('dropCards called for firstCard: $firstCard, attachedCards: $attachedCards');
     final cardList = [firstCard];
     cardList.addAll(attachedCards);
     Vector2 nextPosition = _cards.isEmpty ? position : _cards.last.position;
@@ -78,7 +92,9 @@ class TableauPile extends PositionComponent implements Pile {
         startPriority: card.priority,
         onComplete: () {
           nCardsToMove--;
+          debugPrint('dropCards: card moved, remaining: $nCardsToMove');
           if (nCardsToMove == 0) {
+            debugPrint('dropCards: all cards moved, expanding hit-area');
             calculateHitArea(); // Expand the hit-area.
           }
         },
@@ -88,14 +104,20 @@ class TableauPile extends PositionComponent implements Pile {
 
   void flipTopCard({double start = 0.1}) {
     assert(_cards.last.isFaceDown);
+    debugPrint('flipTopCard called, flipping: ${_cards.last}');
     _cards.last.turnFaceUp(
       start: start,
-      onComplete: layOutCards,
+      onComplete: () {
+        debugPrint('flipTopCard: card flipped, laying out cards');
+        layOutCards();
+      },
     );
   }
 
   void layOutCards() {
+    debugPrint('layOutCards called, cards: $_cards');
     if (_cards.isEmpty) {
+      debugPrint('layOutCards: pile empty, shrinking hit-area');
       calculateHitArea(); // Shrink hit-area when all cards have been removed.
       return;
     }
@@ -111,15 +133,17 @@ class TableauPile extends PositionComponent implements Pile {
   }
 
   void calculateHitArea() {
-    height =
-        KlondikeGame.cardHeight * 1.5 +
-        (_cards.length < 2 ? 0.0 : _cards.last.y - _cards.first.y);
+  height =
+    KlondikeGame.cardHeight * 1.5 +
+    (_cards.length < 2 ? 0.0 : _cards.last.y - _cards.first.y);
+  debugPrint('calculateHitArea called, new height: $height');
   }
 
   List<Card> cardsOnTop(Card card) {
     assert(card.isFaceUp && _cards.contains(card));
-    final index = _cards.indexOf(card);
-    return _cards.getRange(index + 1, _cards.length).toList();
+  final index = _cards.indexOf(card);
+  debugPrint('cardsOnTop called for card: $card, index: $index');
+  return _cards.getRange(index + 1, _cards.length).toList();
   }
 
   //#region Rendering
@@ -131,7 +155,8 @@ class TableauPile extends PositionComponent implements Pile {
 
   @override
   void render(Canvas canvas) {
-    canvas.drawRRect(KlondikeGame.cardRRect, _borderPaint);
+  //debugPrint('render called for TableauPile at position: $position');
+  canvas.drawRRect(KlondikeGame.cardRRect, _borderPaint);
   }
 
   //#endregion

@@ -1,3 +1,5 @@
+
+import 'package:flutter/foundation.dart';
 import 'dart:math';
 
 import 'package:flame/components.dart';
@@ -27,12 +29,16 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
 
   @override
   Future<void> onLoad() async {
-    await Flame.images.load('klondike-sprites.png');
+  debugPrint('KlondikeWorld onLoad called');
+  await Flame.images.load('klondike-sprites.png');
+  debugPrint('Asset klondike-sprites.png loaded');
+  debugPrint('Setting up piles and cards');
 
     stock.position = Vector2(cardGap, topGap);
     waste.position = Vector2(cardSpaceWidth + cardGap, topGap);
 
     for (var i = 0; i < 4; i++) {
+      debugPrint('Adding FoundationPile $i');
       foundations.add(
         FoundationPile(
           i,
@@ -42,6 +48,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       );
     }
     for (var i = 0; i < 7; i++) {
+      debugPrint('Adding TableauPile $i');
       tableauPiles.add(
         TableauPile(
           position: Vector2(
@@ -53,31 +60,35 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     }
 
     // Add a Base Card to the Stock Pile, above the pile and below other cards.
-    final baseCard = Card(1, 0, isBaseCard: true);
-    baseCard.position = stock.position;
-    baseCard.priority = -1;
-    baseCard.pile = stock;
-    stock.priority = -2;
+  debugPrint('Creating base card for StockPile');
+  final baseCard = Card(1, 0, isBaseCard: true);
+  baseCard.position = stock.position;
+  baseCard.priority = -1;
+  baseCard.pile = stock;
+  stock.priority = -2;
 
     for (var rank = 1; rank <= 13; rank++) {
       for (var suit = 0; suit < 4; suit++) {
         final card = Card(rank, suit);
         card.position = stock.position;
         cards.add(card);
+        debugPrint('Created card: rank $rank, suit $suit');
       }
     }
 
-    add(stock);
-    add(waste);
-    addAll(foundations);
-    addAll(tableauPiles);
-    addAll(cards);
-    add(baseCard);
+  debugPrint('Adding piles and cards to world');
+  add(stock);
+  add(waste);
+  addAll(foundations);
+  addAll(tableauPiles);
+  addAll(cards);
+  add(baseCard);
 
     playAreaSize = Vector2(
       7 * cardSpaceWidth + cardGap,
       4 * cardSpaceHeight + topGap,
     );
+    debugPrint('Play area size set: $playAreaSize');
     final gameMidX = playAreaSize.x / 2;
 
     addButton('New deal', gameMidX, Action.newDeal);
@@ -89,16 +100,19 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     camera.viewfinder.visibleGameSize = playAreaSize;
     camera.viewfinder.position = Vector2(gameMidX, 0);
     camera.viewfinder.anchor = Anchor.center;
+    debugPrint('Camera configured');
 
     deal();
   }
 
   void addButton(String label, double buttonX, Action action) {
+    debugPrint('Adding button: $label at $buttonX for $action');
     final button = FlatButton(
       label,
       size: Vector2(KlondikeGame.cardWidth, 0.6 * topGap),
       position: Vector2(buttonX, topGap / 2),
       onReleased: () {
+        debugPrint('Button $label pressed, action: $action');
         if (action == Action.haveFun) {
           // Shortcut to the "win" sequence, for Tutorial purposes only.
           letsCelebrate();
@@ -113,22 +127,27 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
   }
 
   void deal() {
-    assert(cards.length == 52, 'There are ${cards.length} cards: should be 52');
+  debugPrint('Dealing cards');
+  assert(cards.length == 52, 'There are ${cards.length} cards: should be 52');
 
     if (game.action != Action.sameDeal) {
+      debugPrint('New deal: changing RNG seed');
       // New deal: change the Random Number Generator's seed.
       game.seed = Random().nextInt(KlondikeGame.maxInt);
       if (game.action == Action.changeDraw) {
+        debugPrint('Changing draw mode');
         game.klondikeDraw = (game.klondikeDraw == 3) ? 1 : 3;
       }
     }
     // For the "Same deal" option, re-use the previous seed, else use a new one.
+    debugPrint('Shuffling cards with seed: ${game.seed}');
     cards.shuffle(Random(game.seed));
 
     // Each card dealt must be seen to come from the top of the deck!
     var dealPriority = 1;
     for (final card in cards) {
       card.priority = dealPriority++;
+      debugPrint('Card priority set: $card -> ${card.priority}');
     }
 
     // Change priority as cards take off: so later cards fly above earlier ones.
@@ -137,18 +156,21 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     for (var i = 0; i < 7; i++) {
       for (var j = i; j < 7; j++) {
         final card = cards[cardToDeal--];
+        debugPrint('Dealing card to tableau: $card');
         card.doMove(
           tableauPiles[j].position,
           speed: 15.0,
           start: nMovingCards * 0.15,
           startPriority: 100 + nMovingCards,
           onComplete: () {
+            debugPrint('Card moved to tableau: $card');
             tableauPiles[j].acquireCard(card);
             nMovingCards--;
             if (nMovingCards == 0) {
               var delayFactor = 0;
               for (final tableauPile in tableauPiles) {
                 delayFactor++;
+                debugPrint('Flipping top card in tableau $delayFactor');
                 tableauPile.flipTopCard(start: delayFactor * 0.15);
               }
             }
@@ -158,19 +180,23 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       }
     }
     for (var n = 0; n <= cardToDeal; n++) {
+      debugPrint('Adding card to stock: ${cards[n]}');
       stock.acquireCard(cards[n]);
     }
   }
 
   void checkWin() {
     // Callback from a Foundation Pile when it is full (Ace to King).
+    debugPrint('Checking win condition');
     var nComplete = 0;
     for (final f in foundations) {
       if (f.isFull) {
         nComplete++;
+        debugPrint('Foundation pile complete: $f');
       }
     }
     if (nComplete == foundations.length) {
+      debugPrint('All foundation piles complete!');
       letsCelebrate();
     }
   }

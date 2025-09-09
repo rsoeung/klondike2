@@ -1,3 +1,5 @@
+
+import 'package:flutter/foundation.dart';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
@@ -29,7 +31,9 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   static const int maxInt = 0xFFFFFFFE; // = (2 to the power 32) - 1
 
   // This KlondikeGame constructor also initiates the first KlondikeWorld.
-  KlondikeGame() : super(world: KlondikeWorld());
+  KlondikeGame() : super(world: KlondikeWorld()) {
+    debugPrint('KlondikeGame initialized');
+  }
 
   // These three values persist between games and are starting conditions
   // for the next game to be played in KlondikeWorld. The actual seed is
@@ -41,6 +45,7 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
 }
 
 Sprite klondikeSprite(double x, double y, double width, double height) {
+  debugPrint('klondikeSprite called with x: $x, y: $y, width: $width, height: $height');
   return Sprite(
     Flame.images.fromCache('klondike-sprites.png'),
     srcPosition: Vector2(x, y),
