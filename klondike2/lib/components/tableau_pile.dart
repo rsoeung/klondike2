@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'dart:ui';
 
@@ -22,8 +21,11 @@ class TableauPile extends PositionComponent implements Pile {
 
   @override
   bool canMoveCard(Card card, MoveMethod method) {
-    final result = card.isFaceUp && (method == MoveMethod.drag || card == _cards.last);
-    debugPrint('canMoveCard called for card: $card, method: $method, result: $result');
+    final result =
+        card.isFaceUp && (method == MoveMethod.drag || card == _cards.last);
+    debugPrint(
+      'canMoveCard called for card: $card, method: $method, result: $result',
+    );
     return result;
   }
   // Drag can move multiple cards: tap can move last card only (to Foundation).
@@ -35,8 +37,12 @@ class TableauPile extends PositionComponent implements Pile {
       return card.rank.value == 13;
     } else {
       final topCard = _cards.last;
-      final result = card.suit.isRed == !topCard.suit.isRed && card.rank.value == topCard.rank.value - 1;
-      debugPrint('canAcceptCard: topCard: $topCard, card: $card, result: $result');
+      final result =
+          card.suit.isRed == !topCard.suit.isRed &&
+          card.rank.value == topCard.rank.value - 1;
+      debugPrint(
+        'canAcceptCard: topCard: $topCard, card: $card, result: $result',
+      );
       return result;
     }
   }
@@ -57,24 +63,26 @@ class TableauPile extends PositionComponent implements Pile {
 
   @override
   void returnCard(Card card) {
-  debugPrint('returnCard called for card: $card');
-  card.priority = _cards.indexOf(card);
-  layOutCards();
+    debugPrint('returnCard called for card: $card');
+    card.priority = _cards.indexOf(card);
+    layOutCards();
   }
 
   @override
   void acquireCard(Card card) {
-  debugPrint('acquireCard called for card: $card');
-  card.pile = this;
-  card.priority = _cards.length;
-  _cards.add(card);
-  layOutCards();
+    debugPrint('acquireCard called for card: $card');
+    card.pile = this;
+    card.priority = _cards.length;
+    _cards.add(card);
+    layOutCards();
   }
 
   //#endregion
 
   void dropCards(Card firstCard, [List<Card> attachedCards = const []]) {
-    debugPrint('dropCards called for firstCard: $firstCard, attachedCards: $attachedCards');
+    debugPrint(
+      'dropCards called for firstCard: $firstCard, attachedCards: $attachedCards',
+    );
     final cardList = [firstCard];
     cardList.addAll(attachedCards);
     Vector2 nextPosition = _cards.isEmpty ? position : _cards.last.position;
@@ -133,17 +141,17 @@ class TableauPile extends PositionComponent implements Pile {
   }
 
   void calculateHitArea() {
-  height =
-    KlondikeGame.cardHeight * 1.5 +
-    (_cards.length < 2 ? 0.0 : _cards.last.y - _cards.first.y);
-  debugPrint('calculateHitArea called, new height: $height');
+    height =
+        KlondikeGame.cardHeight * 1.5 +
+        (_cards.length < 2 ? 0.0 : _cards.last.y - _cards.first.y);
+    debugPrint('calculateHitArea called, new height: $height');
   }
 
   List<Card> cardsOnTop(Card card) {
     assert(card.isFaceUp && _cards.contains(card));
-  final index = _cards.indexOf(card);
-  debugPrint('cardsOnTop called for card: $card, index: $index');
-  return _cards.getRange(index + 1, _cards.length).toList();
+    final index = _cards.indexOf(card);
+    debugPrint('cardsOnTop called for card: $card, index: $index');
+    return _cards.getRange(index + 1, _cards.length).toList();
   }
 
   //#region Rendering
@@ -155,8 +163,8 @@ class TableauPile extends PositionComponent implements Pile {
 
   @override
   void render(Canvas canvas) {
-  //debugPrint('render called for TableauPile at position: $position');
-  canvas.drawRRect(KlondikeGame.cardRRect, _borderPaint);
+    //debugPrint('render called for TableauPile at position: $position');
+    canvas.drawRRect(KlondikeGame.cardRRect, _borderPaint);
   }
 
   //#endregion

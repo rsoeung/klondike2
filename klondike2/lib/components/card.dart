@@ -20,9 +20,7 @@ class Card extends PositionComponent
   Card(int intRank, int intSuit, {this.isBaseCard = false})
     : rank = Rank.fromInt(intRank),
       suit = Suit.fromInt(intSuit),
-      super(
-        size: KlondikeGame.cardSize,
-      );
+      super(size: KlondikeGame.cardSize);
 
   final Rank rank;
   final Suit suit;
@@ -129,10 +127,7 @@ class Card extends PositionComponent
 
   void _renderFront(Canvas canvas) {
     canvas.drawRRect(cardRRect, frontBackgroundPaint);
-    canvas.drawRRect(
-      cardRRect,
-      suit.isRed ? redBorderPaint : blackBorderPaint,
-    );
+    canvas.drawRRect(cardRRect, suit.isRed ? redBorderPaint : blackBorderPaint);
 
     final rankSprite = suit.isBlack ? rank.blackSprite : rank.redSprite;
     final suitSprite = suit.sprite;
@@ -432,9 +427,7 @@ class Card extends PositionComponent
         to,
         EffectController(duration: dt, startDelay: start, curve: curve),
         onComplete: () {
-          turnFaceUp(
-            onComplete: whenDone,
-          );
+          turnFaceUp(onComplete: whenDone);
         },
       ),
     );
@@ -453,6 +446,20 @@ class Card extends PositionComponent
     position += Vector2(width / 2, 0);
     priority = 100;
     add(
+      /// ### Card Flip Animation
+      ///
+      /// The card flipping effect is implemented using [ScaleEffect.to], which scales the card's x-axis to create a smooth flip animation.
+      /// The animation leverages an [EffectController] with a configurable start delay, ease-out curve, and split duration for both forward and reverse directions.
+      /// - When the animation reaches its maximum scale, the card switches to its face-up view.
+      /// - Upon reaching the minimum scale, animation flags are reset, the card state is updated to face-up, the card is repositioned, and its anchor is set.
+      /// - The [onComplete] callback is invoked when the animation finishes.
+      /// This effect provides a visually appealing card flip transition, enhancing the overall user experience in the game.
+      /// Animates the card flipping effect using [ScaleEffect.to], scaling the card's x-axis to create a flip animation.
+      /// The animation uses an [EffectController] with a start delay, ease-out curve, and split duration for forward and reverse.
+      /// - On reaching the maximum scale, sets the card to face-up view.
+      /// - On reaching the minimum scale, resets animation flags, updates card state to face-up, repositions the card, and sets the anchor.
+      /// - Calls [onComplete] callback when the animation is finished.
+      /// This effect is used to visually flip a card in the game, enhancing the user experience with smooth transitions.
       ScaleEffect.to(
         Vector2(scale.x / 100, scale.y),
         EffectController(

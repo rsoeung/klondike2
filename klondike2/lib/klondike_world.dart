@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'dart:math';
 
@@ -29,10 +28,10 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
 
   @override
   Future<void> onLoad() async {
-  debugPrint('KlondikeWorld onLoad called');
-  await Flame.images.load('klondike-sprites.png');
-  debugPrint('Asset klondike-sprites.png loaded');
-  debugPrint('Setting up piles and cards');
+    debugPrint('KlondikeWorld onLoad called');
+    await Flame.images.load('klondike-sprites.png');
+    debugPrint('Asset klondike-sprites.png loaded');
+    debugPrint('Setting up piles and cards');
 
     stock.position = Vector2(cardGap, topGap);
     waste.position = Vector2(cardSpaceWidth + cardGap, topGap);
@@ -60,12 +59,12 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     }
 
     // Add a Base Card to the Stock Pile, above the pile and below other cards.
-  debugPrint('Creating base card for StockPile');
-  final baseCard = Card(1, 0, isBaseCard: true);
-  baseCard.position = stock.position;
-  baseCard.priority = -1;
-  baseCard.pile = stock;
-  stock.priority = -2;
+    debugPrint('Creating base card for StockPile');
+    final baseCard = Card(1, 0, isBaseCard: true);
+    baseCard.position = stock.position;
+    baseCard.priority = -1;
+    baseCard.pile = stock;
+    stock.priority = -2;
 
     for (var rank = 1; rank <= 13; rank++) {
       for (var suit = 0; suit < 4; suit++) {
@@ -76,13 +75,13 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       }
     }
 
-  debugPrint('Adding piles and cards to world');
-  add(stock);
-  add(waste);
-  addAll(foundations);
-  addAll(tableauPiles);
-  addAll(cards);
-  add(baseCard);
+    debugPrint('Adding piles and cards to world');
+    add(stock);
+    add(waste);
+    addAll(foundations);
+    addAll(tableauPiles);
+    addAll(cards);
+    add(baseCard);
 
     playAreaSize = Vector2(
       7 * cardSpaceWidth + cardGap,
@@ -127,8 +126,8 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
   }
 
   void deal() {
-  debugPrint('Dealing cards');
-  assert(cards.length == 52, 'There are ${cards.length} cards: should be 52');
+    debugPrint('Dealing cards');
+    assert(cards.length == 52, 'There are ${cards.length} cards: should be 52');
 
     if (game.action != Action.sameDeal) {
       debugPrint('New deal: changing RNG seed');

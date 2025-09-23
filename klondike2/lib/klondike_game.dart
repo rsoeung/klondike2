@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'dart:ui';
 
@@ -45,7 +44,9 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
 }
 
 Sprite klondikeSprite(double x, double y, double width, double height) {
-  debugPrint('klondikeSprite called with x: $x, y: $y, width: $width, height: $height');
+  debugPrint(
+    'klondikeSprite called with x: $x, y: $y, width: $width, height: $height',
+  );
   return Sprite(
     Flame.images.fromCache('klondike-sprites.png'),
     srcPosition: Vector2(x, y),
