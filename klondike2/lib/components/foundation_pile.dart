@@ -83,13 +83,16 @@ class FoundationPile extends PositionComponent
   @override
   void render(Canvas canvas) {
     canvas.drawRRect(KlondikeGame.cardRRect, _borderPaint);
-    suit.sprite.render(
-      canvas,
-      position: size / 2,
-      anchor: Anchor.center,
-      size: Vector2.all(KlondikeGame.cardWidth * 0.6),
-      overridePaint: _suitPaint,
-    );
+    // Only show suit icon for classic Klondike-style foundations.
+    if (game.rules.usesKlondikeFoundationSequence) {
+      suit.sprite.render(
+        canvas,
+        position: size / 2,
+        anchor: Anchor.center,
+        size: Vector2.all(KlondikeGame.cardWidth * 0.6),
+        overridePaint: _suitPaint,
+      );
+    }
   }
 
   //#endregion
