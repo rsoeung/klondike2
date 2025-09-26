@@ -7,9 +7,7 @@ import '../pile.dart';
 import '../suit.dart';
 import 'card.dart';
 
-class FoundationPile extends PositionComponent
-    with HasGameReference<KlondikeGame>
-    implements Pile {
+class FoundationPile extends PositionComponent with HasGameReference<KlondikeGame> implements Pile {
   FoundationPile(int intSuit, this.checkWin, {super.position})
     : suit = Suit.fromInt(intSuit),
       super(size: KlondikeGame.cardSize);
@@ -39,9 +37,7 @@ class FoundationPile extends PositionComponent
     }
     // Klondike behavior: suit match & ascending rank.
     final topCardRank = _cards.isEmpty ? 0 : _cards.last.rank.value;
-    return card.suit == suit &&
-        card.rank.value == topCardRank + 1 &&
-        card.attachedCards.isEmpty;
+    return card.suit == suit && card.rank.value == topCardRank + 1 && card.attachedCards.isEmpty;
   }
 
   @override

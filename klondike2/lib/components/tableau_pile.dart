@@ -8,9 +8,7 @@ import '../pile.dart';
 import 'card.dart';
 import '../rules/catte_rules.dart';
 
-class TableauPile extends PositionComponent
-    with HasGameReference<KlondikeGame>
-    implements Pile {
+class TableauPile extends PositionComponent with HasGameReference<KlondikeGame> implements Pile {
   TableauPile({super.position}) : super(size: KlondikeGame.cardSize) {
     debugPrint('TableauPile created at position: [32m$position[0m');
   }
@@ -24,11 +22,8 @@ class TableauPile extends PositionComponent
 
   @override
   bool canMoveCard(Card card, MoveMethod method) {
-    final result =
-        card.isFaceUp && (method == MoveMethod.drag || card == _cards.last);
-    debugPrint(
-      'canMoveCard called for card: $card, method: $method, result: $result',
-    );
+    final result = card.isFaceUp && (method == MoveMethod.drag || card == _cards.last);
+    debugPrint('canMoveCard called for card: $card, method: $method, result: $result');
     return result;
   }
   // Drag can move multiple cards: tap can move last card only (to Foundation).
@@ -52,11 +47,8 @@ class TableauPile extends PositionComponent
     } else {
       final topCard = _cards.last;
       final result =
-          card.suit.isRed == !topCard.suit.isRed &&
-          card.rank.value == topCard.rank.value - 1;
-      debugPrint(
-        'canAcceptCard: topCard: $topCard, card: $card, result: $result',
-      );
+          card.suit.isRed == !topCard.suit.isRed && card.rank.value == topCard.rank.value - 1;
+      debugPrint('canAcceptCard: topCard: $topCard, card: $card, result: $result');
       return result;
     }
   }
@@ -107,9 +99,7 @@ class TableauPile extends PositionComponent
   //#endregion
 
   void dropCards(Card firstCard, [List<Card> attachedCards = const []]) {
-    debugPrint(
-      'dropCards called for firstCard: $firstCard, attachedCards: $attachedCards',
-    );
+    debugPrint('dropCards called for firstCard: $firstCard, attachedCards: $attachedCards');
     final cardList = [firstCard];
     cardList.addAll(attachedCards);
     Vector2 nextPosition = _cards.isEmpty ? position : _cards.last.position;
@@ -118,8 +108,7 @@ class TableauPile extends PositionComponent
       card.pile = this;
       card.priority = _cards.length;
       if (_cards.isNotEmpty) {
-        nextPosition =
-            nextPosition + (card.isFaceDown ? _fanOffset1 : _fanOffset2);
+        nextPosition = nextPosition + (card.isFaceDown ? _fanOffset1 : _fanOffset2);
       }
       _cards.add(card);
       card.doMove(
@@ -169,8 +158,7 @@ class TableauPile extends PositionComponent
 
   void calculateHitArea() {
     height =
-        KlondikeGame.cardHeight * 1.5 +
-        (_cards.length < 2 ? 0.0 : _cards.last.y - _cards.first.y);
+        KlondikeGame.cardHeight * 1.5 + (_cards.length < 2 ? 0.0 : _cards.last.y - _cards.first.y);
     debugPrint('calculateHitArea called, new height: $height');
   }
 

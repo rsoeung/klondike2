@@ -5,10 +5,7 @@ import 'klondike_game.dart';
 @immutable
 class Suit {
   factory Suit.fromInt(int index) {
-    assert(
-      index >= 0 && index <= 3,
-      'index is outside of the bounds of what a suit can be',
-    );
+    assert(index >= 0 && index <= 3, 'index is outside of the bounds of what a suit can be');
     return _singletons[index];
   }
 

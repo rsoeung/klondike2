@@ -74,8 +74,7 @@ class Card extends PositionComponent
     }
   }
 
-  static final Paint backBackgroundPaint = Paint()
-    ..color = const Color(0xff380c02);
+  static final Paint backBackgroundPaint = Paint()..color = const Color(0xff380c02);
   static final Paint backBorderPaint1 = Paint()
     ..color = const Color(0xffdbaf58)
     ..style = PaintingStyle.stroke
@@ -103,8 +102,7 @@ class Card extends PositionComponent
   }
 
   // Front face styling: white background, red suits red, black suits black.
-  static final Paint frontBackgroundPaint = Paint()
-    ..color = const Color(0xffffffff); // pure white
+  static final Paint frontBackgroundPaint = Paint()..color = const Color(0xffffffff); // pure white
   static final Paint redBorderPaint = Paint()
     ..color =
         const Color(0xffcc0000) // strong red border
@@ -145,23 +143,9 @@ class Card extends PositionComponent
     const double rankY = 0.08;
     const double suitY = 0.18; // baseline suit Y (relative)
     _drawSprite(canvas, rankSprite, rankX, rankY, override: glyphPaint);
-    _drawSprite(
-      canvas,
-      suitSprite,
-      rankX,
-      suitY,
-      scale: topSuitScale,
-      override: glyphPaint,
-    );
+    _drawSprite(canvas, suitSprite, rankX, suitY, scale: topSuitScale, override: glyphPaint);
     // Rotated (bottom) rank
-    _drawSprite(
-      canvas,
-      rankSprite,
-      rankX,
-      rankY,
-      rotate: true,
-      override: glyphPaint,
-    );
+    _drawSprite(canvas, rankSprite, rankX, rankY, rotate: true, override: glyphPaint);
     // Rotated (bottom) suit enlarged
     _drawSprite(
       canvas,
@@ -180,255 +164,76 @@ class Card extends PositionComponent
       );
     switch (rank.value) {
       case 1:
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.5,
-          0.5,
-          scale: 2.5,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.5, 0.5, scale: 2.5, override: pipPaint);
       case 2:
         _drawSprite(canvas, suitSprite, 0.5, 0.25, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.5,
-          0.25,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.5, 0.25, rotate: true, override: pipPaint);
       case 3:
         _drawSprite(canvas, suitSprite, 0.5, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.5, 0.5, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.5,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.5, 0.2, rotate: true, override: pipPaint);
       case 4:
         _drawSprite(canvas, suitSprite, 0.3, 0.25, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.25, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.25,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.25,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.3, 0.25, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.25, rotate: true, override: pipPaint);
       case 5:
         _drawSprite(canvas, suitSprite, 0.3, 0.25, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.25, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.25,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.25,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.3, 0.25, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.25, rotate: true, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.5, 0.5, override: pipPaint);
       case 6:
         _drawSprite(canvas, suitSprite, 0.3, 0.25, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.25, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.3, 0.5, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.5, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.25,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.25,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.3, 0.25, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.25, rotate: true, override: pipPaint);
       case 7:
         _drawSprite(canvas, suitSprite, 0.3, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.5, 0.35, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.3, 0.5, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.5, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.3, 0.2, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.2, rotate: true, override: pipPaint);
       case 8:
         _drawSprite(canvas, suitSprite, 0.3, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.5, 0.35, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.3, 0.5, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.5, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.5,
-          0.35,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.3, 0.2, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.2, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.5, 0.35, rotate: true, override: pipPaint);
       case 9:
         _drawSprite(canvas, suitSprite, 0.3, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.5, 0.3, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.3, 0.4, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.4, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.4,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.4,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.3, 0.2, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.2, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.3, 0.4, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.4, rotate: true, override: pipPaint);
       case 10:
         _drawSprite(canvas, suitSprite, 0.3, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.2, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.5, 0.3, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.3, 0.4, override: pipPaint);
         _drawSprite(canvas, suitSprite, 0.7, 0.4, override: pipPaint);
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.2,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.5,
-          0.3,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.3,
-          0.4,
-          rotate: true,
-          override: pipPaint,
-        );
-        _drawSprite(
-          canvas,
-          suitSprite,
-          0.7,
-          0.4,
-          rotate: true,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suitSprite, 0.3, 0.2, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.2, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.5, 0.3, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.3, 0.4, rotate: true, override: pipPaint);
+        _drawSprite(canvas, suitSprite, 0.7, 0.4, rotate: true, override: pipPaint);
       case 11:
-        _drawSprite(
-          canvas,
-          suit.isRed ? redJack : blackJack,
-          0.5,
-          0.5,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suit.isRed ? redJack : blackJack, 0.5, 0.5, override: pipPaint);
       case 12:
-        _drawSprite(
-          canvas,
-          suit.isRed ? redQueen : blackQueen,
-          0.5,
-          0.5,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suit.isRed ? redQueen : blackQueen, 0.5, 0.5, override: pipPaint);
       case 13:
-        _drawSprite(
-          canvas,
-          suit.isRed ? redKing : blackKing,
-          0.5,
-          0.5,
-          override: pipPaint,
-        );
+        _drawSprite(canvas, suit.isRed ? redKing : blackKing, 0.5, 0.5, override: pipPaint);
     }
   }
 
@@ -520,8 +325,7 @@ class Card extends PositionComponent
     _isDragging = false;
 
     // If short drag, return card to Pile and treat it as having been tapped.
-    final shortDrag =
-        (position - _whereCardStarted).length < KlondikeGame.dragTolerance;
+    final shortDrag = (position - _whereCardStarted).length < KlondikeGame.dragTolerance;
     if (shortDrag && attachedCards.isEmpty) {
       doMove(
         _whereCardStarted,
@@ -535,10 +339,7 @@ class Card extends PositionComponent
     }
 
     // Find out what is under the center-point of this card when it is dropped.
-    final dropPiles = parent!
-        .componentsAtPoint(position + size / 2)
-        .whereType<Pile>()
-        .toList();
+    final dropPiles = parent!.componentsAtPoint(position + size / 2).whereType<Pile>().toList();
     if (dropPiles.isNotEmpty) {
       if (dropPiles.first.canAcceptCard(this)) {
         // Found a Pile: move card(s) the rest of the way onto it.
@@ -684,11 +485,7 @@ class Card extends PositionComponent
     );
   }
 
-  void turnFaceUp({
-    double time = 0.3,
-    double start = 0.0,
-    VoidCallback? onComplete,
-  }) {
+  void turnFaceUp({double time = 0.3, double start = 0.0, VoidCallback? onComplete}) {
     assert(!_isFaceUpView, 'Card must be face-down before turning face-up.');
     assert(time > 0.0, 'Time to turn card over must be > 0');
     assert(start >= 0.0, 'Start tim must be >= 0');

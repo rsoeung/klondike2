@@ -63,8 +63,7 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   // computed in KlondikeWorld but is held here in case the player chooses
   // to replay a game by selecting Action.sameDeal.
   int klondikeDraw = 3;
-  int seed =
-      1; // Last used seed (for Same deal). Updated on each new random deal.
+  int seed = 1; // Last used seed (for Same deal). Updated on each new random deal.
   Action action = Action.newDeal;
 
   // Provide a method to advance to a fresh random seed for non-deterministic
@@ -78,9 +77,7 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
 enum RulesVariant { klondike, catte }
 
 Sprite klondikeSprite(double x, double y, double width, double height) {
-  debugPrint(
-    'klondikeSprite called with x: $x, y: $y, width: $width, height: $height',
-  );
+  debugPrint('klondikeSprite called with x: $x, y: $y, width: $width, height: $height');
   return Sprite(
     Flame.images.fromCache('klondike-sprites.png'),
     srcPosition: Vector2(x, y),

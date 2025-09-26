@@ -46,23 +46,14 @@ class KlondikeRules implements GameRules {
     foundations.clear();
     for (var i = 0; i < 4; i++) {
       foundations.add(
-        FoundationPile(
-          i,
-          checkWin,
-          position: Vector2((i + 3) * cardSpaceWidth + cardGap, topGap),
-        ),
+        FoundationPile(i, checkWin, position: Vector2((i + 3) * cardSpaceWidth + cardGap, topGap)),
       );
     }
 
     tableaus.clear();
     for (var i = 0; i < 7; i++) {
       tableaus.add(
-        TableauPile(
-          position: Vector2(
-            i * cardSpaceWidth + cardGap,
-            cardSpaceHeight + topGap,
-          ),
-        ),
+        TableauPile(position: Vector2(i * cardSpaceWidth + cardGap, cardSpaceHeight + topGap)),
       );
     }
   }
@@ -121,15 +112,11 @@ class KlondikeRules implements GameRules {
     if (onTop == null) {
       return moving.rank.value == 13; // King on empty
     }
-    return moving.suit.isRed == !onTop.suit.isRed &&
-        moving.rank.value == onTop.rank.value - 1;
+    return moving.suit.isRed == !onTop.suit.isRed && moving.rank.value == onTop.rank.value - 1;
   }
 
   @override
-  bool canDropOnFoundation({
-    required Card moving,
-    required FoundationPile foundation,
-  }) {
+  bool canDropOnFoundation({required Card moving, required FoundationPile foundation}) {
     // Let FoundationPile.canAcceptCard enforce exact rules in current codebase.
     // This method can be tightened when pile logic is delegated to GameRules.
     return true;
@@ -139,6 +126,5 @@ class KlondikeRules implements GameRules {
   bool canDrawFromStock(StockPile stock) => true;
 
   @override
-  bool checkWin({required List<FoundationPile> foundations}) =>
-      foundations.every((f) => f.isFull);
+  bool checkWin({required List<FoundationPile> foundations}) => foundations.every((f) => f.isFull);
 }

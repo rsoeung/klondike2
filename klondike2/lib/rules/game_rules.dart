@@ -51,10 +51,7 @@ abstract class GameRules {
   // Move/accept rules
   bool canMoveFromTableau(Card card);
   bool canDropOnTableau({required Card moving, required Card? onTop});
-  bool canDropOnFoundation({
-    required Card moving,
-    required FoundationPile foundation,
-  });
+  bool canDropOnFoundation({required Card moving, required FoundationPile foundation});
   bool canDrawFromStock(StockPile stock);
 
   // Win condition

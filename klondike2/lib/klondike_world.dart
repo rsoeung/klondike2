@@ -109,10 +109,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     // Responsive margins as a percentage of play area (min 1 card gap vertically and horizontally)
     final marginX = max(cardGap, playAreaSize.x * 0.05);
     final marginY = max(topGap, playAreaSize.y * 0.05);
-    final visibleWithMargins = Vector2(
-      playAreaSize.x + marginX * 2,
-      playAreaSize.y + marginY * 2,
-    );
+    final visibleWithMargins = Vector2(playAreaSize.x + marginX * 2, playAreaSize.y + marginY * 2);
     camera.viewfinder.visibleGameSize = visibleWithMargins;
     camera.viewfinder.position = playAreaSize / 2; // center of world
     camera.viewfinder.anchor = Anchor.center;
@@ -121,19 +118,11 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     );
 
     // Dealing via rules
-    rules.deal(
-      deck: cards,
-      tableaus: tableauPiles,
-      stock: stock,
-      waste: waste,
-      seed: game.seed,
-    );
+    rules.deal(deck: cards, tableaus: tableauPiles, stock: stock, waste: waste, seed: game.seed);
   }
 
   void addRulesToggleButton(double buttonX) {
-    final current = game.rulesVariant == RulesVariant.klondike
-        ? 'Klondike'
-        : 'CatTe';
+    final current = game.rulesVariant == RulesVariant.klondike ? 'Klondike' : 'CatTe';
     final label = 'Rules: $current';
     debugPrint('Adding rules toggle button: $label at $buttonX');
     final button = FlatButton(
@@ -221,12 +210,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       Vector2(0.0, -1.0),
       Vector2(-1.0, 0.0),
     ];
-    final length = [
-      offscreenHeight,
-      offscreenWidth,
-      offscreenHeight,
-      offscreenWidth,
-    ];
+    final length = [offscreenHeight, offscreenWidth, offscreenHeight, offscreenWidth];
 
     var side = 0;
     var cardsToMove = nCards;

@@ -5,23 +5,12 @@ import 'klondike_game.dart';
 @immutable
 class Rank {
   factory Rank.fromInt(int value) {
-    assert(
-      value >= 1 && value <= 13,
-      'value is outside of the bounds of what a rank can be',
-    );
+    assert(value >= 1 && value <= 13, 'value is outside of the bounds of what a rank can be');
     return _singletons[value - 1];
   }
 
-  Rank._(
-    this.value,
-    this.label,
-    double x1,
-    double y1,
-    double x2,
-    double y2,
-    double w,
-    double h,
-  ) : redSprite = klondikeSprite(x1, y1, w, h),
+  Rank._(this.value, this.label, double x1, double y1, double x2, double y2, double w, double h)
+    : redSprite = klondikeSprite(x1, y1, w, h),
       blackSprite = klondikeSprite(x2, y2, w, h);
 
   final int value;

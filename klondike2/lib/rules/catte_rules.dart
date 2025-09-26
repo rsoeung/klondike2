@@ -59,11 +59,7 @@ class CatTeRules implements GameRules {
     for (var i = 0; i < 6; i++) {
       // Use modulo to map 6 columns onto 4 available suit sprites.
       foundations.add(
-        FoundationPile(
-          i % 4,
-          checkWin,
-          position: Vector2(i * cardSpaceWidth + cardGap, topGap),
-        ),
+        FoundationPile(i % 4, checkWin, position: Vector2(i * cardSpaceWidth + cardGap, topGap)),
       );
     }
 
@@ -71,12 +67,7 @@ class CatTeRules implements GameRules {
     tableaus.clear();
     for (var i = 0; i < 6; i++) {
       tableaus.add(
-        TableauPile(
-          position: Vector2(
-            i * cardSpaceWidth + cardGap,
-            topGap + cardSpaceHeight,
-          ),
-        ),
+        TableauPile(position: Vector2(i * cardSpaceWidth + cardGap, topGap + cardSpaceHeight)),
       );
     }
 
@@ -108,9 +99,7 @@ class CatTeRules implements GameRules {
         tableaus[t].acquireCard(card);
       }
     }
-    debugPrint(
-      'CatTe deal complete. 6 cards per tableau; remaining cards unused.',
-    );
+    debugPrint('CatTe deal complete. 6 cards per tableau; remaining cards unused.');
   }
 
   @override
@@ -126,10 +115,7 @@ class CatTeRules implements GameRules {
   bool canDropOnTableau({required Card moving, required Card? onTop}) => false; // No tableau building.
 
   @override
-  bool canDropOnFoundation({
-    required Card moving,
-    required FoundationPile foundation,
-  }) {
+  bool canDropOnFoundation({required Card moving, required FoundationPile foundation}) {
     // Allow drop if the card came from the tableau column directly beneath this
     // foundation (same index). It can be an interior card; CatTe permits
     // plucking single interior cards. Top-ness is not required.
