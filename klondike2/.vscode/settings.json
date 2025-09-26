@@ -1,0 +1,15 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "Dart-Code.dart-code",
+  "dart.lineLength": 100,
+  "[dart]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "editor.wordWrapColumn": 100,
+  "prettier.printWidth": 100,
+  "editor.rulers": [
+      100
+  ],
+
+}
