@@ -130,7 +130,9 @@ class CatTeRules implements GameRules {
     required Card moving,
     required FoundationPile foundation,
   }) {
-    // Allow drop only if card came from tableau column directly beneath this foundation and is top.
+    // Allow drop if the card came from the tableau column directly beneath this
+    // foundation (same index). It can be an interior card; CatTe permits
+    // plucking single interior cards. Top-ness is not required.
     final pile = moving.pile;
     if (pile is! TableauPile) return false;
     final game = pile.game;
@@ -139,10 +141,9 @@ class CatTeRules implements GameRules {
     final foundationsList = world.foundations as List<FoundationPile>;
     final tableauIndex = tableaus.indexOf(pile);
     final foundationIndex = foundationsList.indexOf(foundation);
-    final isTop = pile.cardsOnTop(moving).isEmpty;
-    final allowed = foundationIndex == tableauIndex && isTop;
+    final allowed = foundationIndex == tableauIndex && moving.isFaceUp;
     debugPrint(
-      'CatTe canDropOnFoundation tableau=$tableauIndex foundation=$foundationIndex top=$isTop => $allowed',
+      'CatTe canDropOnFoundation tableau=$tableauIndex foundation=$foundationIndex faceUp=${moving.isFaceUp} => $allowed',
     );
     return allowed;
   }

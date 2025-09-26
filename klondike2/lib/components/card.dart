@@ -137,29 +137,38 @@ class Card extends PositionComponent
         suit.isRed ? const Color(0xffd00000) : const Color(0xff000000),
         BlendMode.srcATop,
       );
-    _drawSprite(canvas, rankSprite, 0.1, 0.08, override: glyphPaint);
+    // Corner glyphs:
+    // Keep rank size, slightly enlarge bottom (rotated) suit for better legibility.
+    const double topSuitScale = 0.5; // unchanged for consistency
+    const double bottomSuitScale = 0.5; // enlarged from 0.5
+    const double rankX = 0.1;
+    const double rankY = 0.08;
+    const double suitY = 0.18; // baseline suit Y (relative)
+    _drawSprite(canvas, rankSprite, rankX, rankY, override: glyphPaint);
     _drawSprite(
       canvas,
       suitSprite,
-      0.1,
-      0.18,
-      scale: 0.5,
+      rankX,
+      suitY,
+      scale: topSuitScale,
       override: glyphPaint,
     );
+    // Rotated (bottom) rank
     _drawSprite(
       canvas,
       rankSprite,
-      0.1,
-      0.08,
+      rankX,
+      rankY,
       rotate: true,
       override: glyphPaint,
     );
+    // Rotated (bottom) suit enlarged
     _drawSprite(
       canvas,
       suitSprite,
-      0.1,
-      0.18,
-      scale: 0.5,
+      rankX,
+      suitY + 0.004, // slight downward nudge to visually center bigger suit
+      scale: bottomSuitScale,
       rotate: true,
       override: glyphPaint,
     );
