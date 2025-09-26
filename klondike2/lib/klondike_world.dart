@@ -167,7 +167,8 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
         } else {
           // Restart with a new deal or the same deal as before.
           game.action = action;
-          game.world = KlondikeWorld();
+          // Preserve currently selected rules variant when starting a new or same deal.
+          game.world = KlondikeWorld(rules: game.buildRules());
         }
       },
     );
@@ -255,7 +256,8 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
             } else {
               // Restart with a new deal after winning or pressing "Have fun".
               game.action = Action.newDeal;
-              game.world = KlondikeWorld();
+              // Preserve current rules variant after celebration restart.
+              game.world = KlondikeWorld(rules: game.buildRules());
             }
           }
         },
