@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'dart:ui';
+import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
@@ -62,8 +63,16 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   // computed in KlondikeWorld but is held here in case the player chooses
   // to replay a game by selecting Action.sameDeal.
   int klondikeDraw = 3;
-  int seed = 1;
+  int seed =
+      1; // Last used seed (for Same deal). Updated on each new random deal.
   Action action = Action.newDeal;
+
+  // Provide a method to advance to a fresh random seed for non-deterministic
+  // games (e.g., CatTe) while retaining ability to replay via Same deal.
+  void newRandomSeed() {
+    seed = Random().nextInt(maxInt);
+    debugPrint('Generated new random seed: $seed');
+  }
 }
 
 enum RulesVariant { klondike, catte }

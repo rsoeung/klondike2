@@ -38,6 +38,14 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     debugPrint('Asset klondike-sprites.png loaded');
     debugPrint('Setting up piles and cards');
 
+    // For a new random deal, create a new seed. Preserve existing seed only
+    // when Action.sameDeal is requested.
+    if (game.action != Action.sameDeal) {
+      game.newRandomSeed();
+    } else {
+      debugPrint('Reusing existing seed: ${game.seed}');
+    }
+
     // Let rules decide initial pile positions/layout
     rules.setupPiles(
       cardSize: KlondikeGame.cardSize,
