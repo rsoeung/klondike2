@@ -14,6 +14,7 @@ import '../suit.dart';
 import 'foundation_pile.dart';
 import 'stock_pile.dart';
 import 'tableau_pile.dart';
+import '../rules/klondike_rules.dart';
 
 class Card extends PositionComponent
     with DragCallbacks, TapCallbacks, HasWorldReference<KlondikeWorld> {
@@ -369,15 +370,18 @@ class Card extends PositionComponent
     // Can be called by onTapUp or after a very short (failed) drag-and-drop.
     // We need to be more user-friendly towards taps that include a short drag.
     if (pile?.canMoveCard(this, MoveMethod.tap) ?? false) {
-      final suitIndex = suit.value;
-      if (world.foundations[suitIndex].canAcceptCard(this)) {
-        pile!.removeCard(this, MoveMethod.tap);
-        doMove(
-          world.foundations[suitIndex].position,
-          onComplete: () {
-            world.foundations[suitIndex].acquireCard(this);
-          },
-        );
+      // Only Klondike auto-taps by suit index. Other rulesets may define different logic.
+      if (world.game.rules is KlondikeRules) {
+        final suitIndex = suit.value;
+        if (world.foundations[suitIndex].canAcceptCard(this)) {
+          pile!.removeCard(this, MoveMethod.tap);
+          doMove(
+            world.foundations[suitIndex].position,
+            onComplete: () {
+              world.foundations[suitIndex].acquireCard(this);
+            },
+          );
+        }
       }
     } else if (pile is StockPile) {
       world.stock.handleTapUp(this);

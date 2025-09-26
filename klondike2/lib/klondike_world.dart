@@ -52,13 +52,18 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       checkWin: checkWin,
     );
 
-    // Add a Base Card to the Stock Pile, above the pile and below other cards.
-    debugPrint('Creating base card for StockPile');
-    final baseCard = Card(1, 0, isBaseCard: true);
-    baseCard.position = stock.position;
-    baseCard.priority = -1;
-    baseCard.pile = stock;
-    stock.priority = -2;
+    Card? baseCard;
+    if (rules.usesBaseCard) {
+      // Add a Base Card to the Stock Pile, above the pile and below other cards.
+      debugPrint('Creating base card for StockPile');
+      baseCard = Card(1, 0, isBaseCard: true)
+        ..position = stock.position
+        ..priority = -1
+        ..pile = stock;
+      stock.priority = -2;
+    } else {
+      debugPrint('Rules specify no base card. Skipping base card creation.');
+    }
 
     for (var rank = 1; rank <= 13; rank++) {
       for (var suit = 0; suit < 4; suit++) {
@@ -75,7 +80,9 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     addAll(foundations);
     addAll(tableauPiles);
     addAll(cards);
-    add(baseCard);
+    if (baseCard != null) {
+      add(baseCard);
+    }
 
     playAreaSize = rules.playAreaSize;
     debugPrint('Play area size set: $playAreaSize');
@@ -118,7 +125,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
   void addRulesToggleButton(double buttonX) {
     final current = game.rulesVariant == RulesVariant.klondike
         ? 'Klondike'
-        : 'Custom';
+        : 'CatTe';
     final label = 'Rules: $current';
     debugPrint('Adding rules toggle button: $label at $buttonX');
     final button = FlatButton(
@@ -128,7 +135,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       onReleased: () {
         final before = game.rulesVariant;
         game.rulesVariant = before == RulesVariant.klondike
-            ? RulesVariant.custom
+            ? RulesVariant.catte
             : RulesVariant.klondike;
         final after = game.rulesVariant;
         debugPrint('Toggling rules: $before -> $after');

@@ -8,7 +8,7 @@ import 'package:flame/game.dart';
 import 'klondike_world.dart';
 import 'rules/game_rules.dart';
 import 'rules/klondike_rules.dart';
-import 'rules/custom_rules_template.dart';
+import 'rules/catte_rules.dart';
 
 enum Action { newDeal, sameDeal, changeDraw, haveFun }
 
@@ -37,8 +37,8 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
 
   GameRules buildRules() {
     switch (rulesVariant) {
-      case RulesVariant.custom:
-        return CustomRules();
+      case RulesVariant.catte:
+        return CatTeRules();
       case RulesVariant.klondike:
         return KlondikeRules();
     }
@@ -66,7 +66,7 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   Action action = Action.newDeal;
 }
 
-enum RulesVariant { klondike, custom }
+enum RulesVariant { klondike, catte }
 
 Sprite klondikeSprite(double x, double y, double width, double height) {
   debugPrint(

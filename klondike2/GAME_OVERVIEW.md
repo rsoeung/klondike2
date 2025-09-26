@@ -123,23 +123,23 @@ If you want a deeper explanation of any specific file, class, or function, just 
 
 ## Create Your Own Rules
 
-You can swap out Klondike for your own card game rules. The codebase exposes a `GameRules` interface and two implementations:
+You can swap out Klondike for other rule sets. The codebase exposes a `GameRules` interface and example implementations:
 
-- `KlondikeRules` (current game)
-- `CustomRules` (template to start from)
+- `KlondikeRules` (standard solitaire)
+- `CatTeRules` (work-in-progress custom rule set with 6 tableau + 6 foundations)
 
 ### Where to look
 
 - Interface: `lib/rules/game_rules.dart`
 - Klondike implementation: `lib/rules/klondike_rules.dart`
-- Template: `lib/rules/custom_rules_template.dart`
+- CatTe implementation: `lib/rules/catte_rules.dart`
 - Wiring: `lib/klondike_game.dart` (buildRules/RulesVariant) and `lib/klondike_world.dart` (uses rules for layout/deal/win)
 
 ### Quick start
 
-1) Duplicate the template
+1) Start from CatTe or Klondike
 
-- Copy `lib/rules/custom_rules_template.dart` to a new file (e.g., `lib/rules/my_rules.dart`).
+- Copy `lib/rules/catte_rules.dart` (simpler) or `lib/rules/klondike_rules.dart` (fuller) to a new file.
 - Rename the class (e.g., `class MyRules implements GameRules`).
 
 2) Implement your rules
@@ -159,7 +159,7 @@ You can swap out Klondike for your own card game rules. The codebase exposes a `
 4) Switch rules at runtime
 
 - A "Rules" button appears to the left of the top action buttons.
-- Tapping it toggles between Klondike and Custom. The world rebuilds automatically via `game.rebuildWorld()`.
+- Tapping it toggles between Klondike and CatTe. The world rebuilds automatically via `game.rebuildWorld()`.
 
 ### Tips
 

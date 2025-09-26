@@ -18,6 +18,13 @@ abstract class GameRules {
   // Whether the Stock pile should show a base/back card in the stack
   bool get usesBaseCard => false;
 
+  // Whether this ruleset exposes/uses a waste pile component on the board.
+  bool get usesWaste => true;
+
+  // Whether to apply the standard Klondike foundation suit+ascending sequence validation.
+  // If false, foundation acceptance is left entirely to canDropOnFoundation.
+  bool get usesKlondikeFoundationSequence => true;
+
   // Setup piles & cards positions
   void setupPiles({
     required Vector2 cardSize,

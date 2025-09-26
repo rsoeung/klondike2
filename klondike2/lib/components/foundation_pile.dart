@@ -33,7 +33,11 @@ class FoundationPile extends PositionComponent
     final rules = game.rules;
     final allow = rules.canDropOnFoundation(moving: card, foundation: this);
     if (!allow) return false;
-    // Default Klondike behavior for compatibility
+    if (!rules.usesKlondikeFoundationSequence) {
+      // Non-Klondike sequence: accept any single top card (no building rules enforced here).
+      return card.attachedCards.isEmpty;
+    }
+    // Klondike behavior: suit match & ascending rank.
     final topCardRank = _cards.isEmpty ? 0 : _cards.last.rank.value;
     return card.suit == suit &&
         card.rank.value == topCardRank + 1 &&

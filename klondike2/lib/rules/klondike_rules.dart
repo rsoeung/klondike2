@@ -16,6 +16,10 @@ class KlondikeRules implements GameRules {
 
   @override
   bool get usesBaseCard => true;
+  @override
+  bool get usesWaste => true;
+  @override
+  bool get usesKlondikeFoundationSequence => true;
 
   @override
   Vector2 get playAreaSize => Vector2(

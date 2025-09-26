@@ -15,6 +15,10 @@ class CustomRules implements GameRules {
 
   @override
   bool get usesBaseCard => false;
+  @override
+  bool get usesWaste => true;
+  @override
+  bool get usesKlondikeFoundationSequence => false;
 
   @override
   Vector2 get playAreaSize => Vector2(
