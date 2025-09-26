@@ -12,8 +12,13 @@ import 'components/tableau_pile.dart';
 import 'components/waste_pile.dart';
 
 import 'klondike_game.dart';
+import 'rules/game_rules.dart';
+import 'rules/klondike_rules.dart';
 
 class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
+  KlondikeWorld({GameRules? rules}) : rules = rules ?? KlondikeRules();
+
+  final GameRules rules;
   final cardGap = KlondikeGame.cardGap;
   final topGap = KlondikeGame.topGap;
   final cardSpaceWidth = KlondikeGame.cardSpaceWidth;
@@ -33,30 +38,19 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     debugPrint('Asset klondike-sprites.png loaded');
     debugPrint('Setting up piles and cards');
 
-    stock.position = Vector2(cardGap, topGap);
-    waste.position = Vector2(cardSpaceWidth + cardGap, topGap);
-
-    for (var i = 0; i < 4; i++) {
-      debugPrint('Adding FoundationPile $i');
-      foundations.add(
-        FoundationPile(
-          i,
-          checkWin,
-          position: Vector2((i + 3) * cardSpaceWidth + cardGap, topGap),
-        ),
-      );
-    }
-    for (var i = 0; i < 7; i++) {
-      debugPrint('Adding TableauPile $i');
-      tableauPiles.add(
-        TableauPile(
-          position: Vector2(
-            i * cardSpaceWidth + cardGap,
-            cardSpaceHeight + topGap,
-          ),
-        ),
-      );
-    }
+    // Let rules decide initial pile positions/layout
+    rules.setupPiles(
+      cardSize: KlondikeGame.cardSize,
+      cardGap: cardGap,
+      topGap: topGap,
+      cardSpaceWidth: cardSpaceWidth,
+      cardSpaceHeight: cardSpaceHeight,
+      stock: stock,
+      waste: waste,
+      foundations: foundations,
+      tableaus: tableauPiles,
+      checkWin: checkWin,
+    );
 
     // Add a Base Card to the Stock Pile, above the pile and below other cards.
     debugPrint('Creating base card for StockPile');
@@ -83,25 +77,65 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     addAll(cards);
     add(baseCard);
 
-    playAreaSize = Vector2(
-      7 * cardSpaceWidth + cardGap,
-      4 * cardSpaceHeight + topGap,
-    );
+    playAreaSize = rules.playAreaSize;
     debugPrint('Play area size set: $playAreaSize');
     final gameMidX = playAreaSize.x / 2;
+
+    // Add a toggle to switch rules at runtime (left of the first button).
+    addRulesToggleButton(gameMidX - cardSpaceWidth);
 
     addButton('New deal', gameMidX, Action.newDeal);
     addButton('Same deal', gameMidX + cardSpaceWidth, Action.sameDeal);
     addButton('Draw 1 or 3', gameMidX + 2 * cardSpaceWidth, Action.changeDraw);
     addButton('Have fun', gameMidX + 3 * cardSpaceWidth, Action.haveFun);
 
+    // Center the whole play area and add responsive margins.
     final camera = game.camera;
-    camera.viewfinder.visibleGameSize = playAreaSize;
-    camera.viewfinder.position = Vector2(gameMidX, 0);
+    // Responsive margins as a percentage of play area (min 1 card gap vertically and horizontally)
+    final marginX = max(cardGap, playAreaSize.x * 0.05);
+    final marginY = max(topGap, playAreaSize.y * 0.05);
+    final visibleWithMargins = Vector2(
+      playAreaSize.x + marginX * 2,
+      playAreaSize.y + marginY * 2,
+    );
+    camera.viewfinder.visibleGameSize = visibleWithMargins;
+    camera.viewfinder.position = playAreaSize / 2; // center of world
     camera.viewfinder.anchor = Anchor.center;
-    debugPrint('Camera configured');
+    debugPrint(
+      'Camera configured (centered). margins=($marginX,$marginY), visible=$visibleWithMargins, position=${camera.viewfinder.position}',
+    );
 
-    deal();
+    // Dealing via rules
+    rules.deal(
+      deck: cards,
+      tableaus: tableauPiles,
+      stock: stock,
+      waste: waste,
+      seed: game.seed,
+    );
+  }
+
+  void addRulesToggleButton(double buttonX) {
+    final current = game.rulesVariant == RulesVariant.klondike
+        ? 'Klondike'
+        : 'Custom';
+    final label = 'Rules: $current';
+    debugPrint('Adding rules toggle button: $label at $buttonX');
+    final button = FlatButton(
+      label,
+      size: Vector2(KlondikeGame.cardWidth, 0.6 * topGap),
+      position: Vector2(buttonX, topGap / 2),
+      onReleased: () {
+        final before = game.rulesVariant;
+        game.rulesVariant = before == RulesVariant.klondike
+            ? RulesVariant.custom
+            : RulesVariant.klondike;
+        final after = game.rulesVariant;
+        debugPrint('Toggling rules: $before -> $after');
+        game.rebuildWorld();
+      },
+    );
+    add(button);
   }
 
   void addButton(String label, double buttonX, Action action) {
@@ -127,74 +161,14 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
 
   void deal() {
     debugPrint('Dealing cards');
-    assert(cards.length == 52, 'There are ${cards.length} cards: should be 52');
-
-    if (game.action != Action.sameDeal) {
-      debugPrint('New deal: changing RNG seed');
-      // New deal: change the Random Number Generator's seed.
-      game.seed = Random().nextInt(KlondikeGame.maxInt);
-      if (game.action == Action.changeDraw) {
-        debugPrint('Changing draw mode');
-        game.klondikeDraw = (game.klondikeDraw == 3) ? 1 : 3;
-      }
-    }
-    // For the "Same deal" option, re-use the previous seed, else use a new one.
-    debugPrint('Shuffling cards with seed: ${game.seed}');
-    cards.shuffle(Random(game.seed));
-
-    // Each card dealt must be seen to come from the top of the deck!
-    var dealPriority = 1;
-    for (final card in cards) {
-      card.priority = dealPriority++;
-      debugPrint('Card priority set: $card -> ${card.priority}');
-    }
-
-    // Change priority as cards take off: so later cards fly above earlier ones.
-    var cardToDeal = cards.length - 1;
-    var nMovingCards = 0;
-    for (var i = 0; i < 7; i++) {
-      for (var j = i; j < 7; j++) {
-        final card = cards[cardToDeal--];
-        debugPrint('Dealing card to tableau: $card');
-        card.doMove(
-          tableauPiles[j].position,
-          speed: 15.0,
-          start: nMovingCards * 0.15,
-          startPriority: 100 + nMovingCards,
-          onComplete: () {
-            debugPrint('Card moved to tableau: $card');
-            tableauPiles[j].acquireCard(card);
-            nMovingCards--;
-            if (nMovingCards == 0) {
-              var delayFactor = 0;
-              for (final tableauPile in tableauPiles) {
-                delayFactor++;
-                debugPrint('Flipping top card in tableau $delayFactor');
-                tableauPile.flipTopCard(start: delayFactor * 0.15);
-              }
-            }
-          },
-        );
-        nMovingCards++;
-      }
-    }
-    for (var n = 0; n <= cardToDeal; n++) {
-      debugPrint('Adding card to stock: ${cards[n]}');
-      stock.acquireCard(cards[n]);
-    }
+    // Keep the original deal for now to preserve behavior when pressing buttons
+    // but in onLoad we already deal via rules.
   }
 
   void checkWin() {
     // Callback from a Foundation Pile when it is full (Ace to King).
     debugPrint('Checking win condition');
-    var nComplete = 0;
-    for (final f in foundations) {
-      if (f.isFull) {
-        nComplete++;
-        debugPrint('Foundation pile complete: $f');
-      }
-    }
-    if (nComplete == foundations.length) {
+    if (rules.checkWin(foundations: foundations)) {
       debugPrint('All foundation piles complete!');
       letsCelebrate();
     }
@@ -206,15 +180,13 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     //
     // First get the device's screen-size in game co-ordinates, then get the
     // top-left of the off-screen area that will accept the scattered cards.
-    // Note: The play area is anchored at TopCenter, so topLeft.y is fixed.
-
-    final cameraZoom = game.camera.viewfinder.zoom;
-    final zoomedScreen = game.size / cameraZoom;
-    final screenCenter = (playAreaSize - KlondikeGame.cardSize) / 2;
-    final topLeft = Vector2(
-      (playAreaSize.x - zoomedScreen.x) / 2 - KlondikeGame.cardWidth,
-      -KlondikeGame.cardHeight,
-    );
+    // With camera anchored at center, compute screen center and top-left
+    final vf = game.camera.viewfinder;
+    final cameraZoom = vf.zoom;
+    final zoomedScreen = game.size / cameraZoom; // world units
+    final worldCenter = vf.position; // center of visible region
+    final screenCenter = worldCenter - KlondikeGame.cardSize / 2;
+    final topLeft = worldCenter - zoomedScreen / 2 - KlondikeGame.cardSize / 2;
     final nCards = cards.length;
     final offscreenHeight = zoomedScreen.y + KlondikeGame.cardSize.y;
     final offscreenWidth = zoomedScreen.x + KlondikeGame.cardSize.x;

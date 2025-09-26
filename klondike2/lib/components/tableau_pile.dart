@@ -7,7 +7,9 @@ import '../klondike_game.dart';
 import '../pile.dart';
 import 'card.dart';
 
-class TableauPile extends PositionComponent implements Pile {
+class TableauPile extends PositionComponent
+    with HasGameReference<KlondikeGame>
+    implements Pile {
   TableauPile({super.position}) : super(size: KlondikeGame.cardSize) {
     debugPrint('TableauPile created at position: [32m$position[0m');
   }
@@ -32,6 +34,17 @@ class TableauPile extends PositionComponent implements Pile {
 
   @override
   bool canAcceptCard(Card card) {
+    // Delegate to rules first; if rules veto, return false.
+    final rules = game.rules;
+    // Find top card if present to pass context.
+    final Card? topCard = _cards.isEmpty ? null : _cards.last;
+    try {
+      if (!rules.canDropOnTableau(moving: card, onTop: topCard)) {
+        return false;
+      }
+    } catch (_) {
+      // If rules not wired yet, fall back silently
+    }
     if (_cards.isEmpty) {
       debugPrint('canAcceptCard: pile empty, card rank: ${card.rank.value}');
       return card.rank.value == 13;

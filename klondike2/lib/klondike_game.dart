@@ -6,6 +6,9 @@ import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 
 import 'klondike_world.dart';
+import 'rules/game_rules.dart';
+import 'rules/klondike_rules.dart';
+import 'rules/custom_rules_template.dart';
 
 enum Action { newDeal, sameDeal, changeDraw, haveFun }
 
@@ -29,9 +32,29 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   /// Constant used when creating Random seed.
   static const int maxInt = 0xFFFFFFFE; // = (2 to the power 32) - 1
 
+  // Choose which rules to use for the game.
+  RulesVariant rulesVariant = RulesVariant.klondike;
+
+  GameRules buildRules() {
+    switch (rulesVariant) {
+      case RulesVariant.custom:
+        return CustomRules();
+      case RulesVariant.klondike:
+        return KlondikeRules();
+    }
+  }
+
+  // Expose current rules from the active world for components.
+  GameRules get rules => (world as dynamic).rules as GameRules;
+
   // This KlondikeGame constructor also initiates the first KlondikeWorld.
-  KlondikeGame() : super(world: KlondikeWorld()) {
+  KlondikeGame() : super(world: KlondikeWorld(rules: KlondikeRules())) {
     debugPrint('KlondikeGame initialized');
+  }
+
+  void rebuildWorld() {
+    // Recreate world with selected rules
+    world = KlondikeWorld(rules: buildRules());
   }
 
   // These three values persist between games and are starting conditions
@@ -42,6 +65,8 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   int seed = 1;
   Action action = Action.newDeal;
 }
+
+enum RulesVariant { klondike, custom }
 
 Sprite klondikeSprite(double x, double y, double width, double height) {
   debugPrint(

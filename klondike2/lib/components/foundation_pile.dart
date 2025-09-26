@@ -7,7 +7,9 @@ import '../pile.dart';
 import '../suit.dart';
 import 'card.dart';
 
-class FoundationPile extends PositionComponent implements Pile {
+class FoundationPile extends PositionComponent
+    with HasGameReference<KlondikeGame>
+    implements Pile {
   FoundationPile(int intSuit, this.checkWin, {super.position})
     : suit = Suit.fromInt(intSuit),
       super(size: KlondikeGame.cardSize);
@@ -27,6 +29,11 @@ class FoundationPile extends PositionComponent implements Pile {
 
   @override
   bool canAcceptCard(Card card) {
+    // Delegate to rules first; if a ruleset allows all, fall back to default.
+    final rules = game.rules;
+    final allow = rules.canDropOnFoundation(moving: card, foundation: this);
+    if (!allow) return false;
+    // Default Klondike behavior for compatibility
     final topCardRank = _cards.isEmpty ? 0 : _cards.last.rank.value;
     return card.suit == suit &&
         card.rank.value == topCardRank + 1 &&

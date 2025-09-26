@@ -120,3 +120,51 @@
 ---
 
 If you want a deeper explanation of any specific file, class, or function, just ask!
+
+## Create Your Own Rules
+
+You can swap out Klondike for your own card game rules. The codebase exposes a `GameRules` interface and two implementations:
+
+- `KlondikeRules` (current game)
+- `CustomRules` (template to start from)
+
+### Where to look
+
+- Interface: `lib/rules/game_rules.dart`
+- Klondike implementation: `lib/rules/klondike_rules.dart`
+- Template: `lib/rules/custom_rules_template.dart`
+- Wiring: `lib/klondike_game.dart` (buildRules/RulesVariant) and `lib/klondike_world.dart` (uses rules for layout/deal/win)
+
+### Quick start
+
+1) Duplicate the template
+
+- Copy `lib/rules/custom_rules_template.dart` to a new file (e.g., `lib/rules/my_rules.dart`).
+- Rename the class (e.g., `class MyRules implements GameRules`).
+
+2) Implement your rules
+
+- Layout: Implement `setupPiles()` to position piles and register a `checkWin` callback.
+- Deal: Implement `deal()` to move cards from `deck` to piles (animations optional).
+- Play area: Set `playAreaSize` to fit your layout.
+- Moves: Override `canDropOnTableau`, `canDropOnFoundation`, `canDrawFromStock` (and others if you add them) to enforce your game’s rules.
+- Win condition: Implement `checkWin()` to return true when the game is won.
+- Base card: Set `usesBaseCard` true/false depending on whether you need a placeholder card.
+
+3) Wire it up
+
+- Add a new case to `RulesVariant` and `buildRules()` in `lib/klondike_game.dart` if you want a distinct option beyond the provided `custom`.
+- Or, for quick iteration, replace the existing `CustomRules` in `buildRules()` with your rules class.
+
+4) Switch rules at runtime
+
+- A "Rules" button appears to the left of the top action buttons.
+- Tapping it toggles between Klondike and Custom. The world rebuilds automatically via `game.rebuildWorld()`.
+
+### Tips
+
+- Keep your `setupPiles()` consistent with your `playAreaSize` so the camera centers correctly.
+- Use `debugPrint` generously while developing rules to trace behavior.
+- If a pile also has built-in validation, your `canDrop...` hooks run first. You can allow or deny early, and the pile’s default logic will still apply if you return `null` or keep permissive behavior.
+- For alternative draw counts (e.g., draw 1 vs. 3), see `klondikeDraw` in `KlondikeGame` and adjust your rules/piles accordingly.
+

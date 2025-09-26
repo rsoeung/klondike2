@@ -54,6 +54,10 @@ class StockPile extends PositionComponent
         acquireCard(card);
       });
     } else {
+      // Delegate draw policy to rules (how many to draw, etc.)
+      if (!game.rules.canDrawFromStock(this)) {
+        return;
+      }
       for (var i = 0; i < game.klondikeDraw; i++) {
         if (_cards.isNotEmpty) {
           final card = _cards.removeLast();
