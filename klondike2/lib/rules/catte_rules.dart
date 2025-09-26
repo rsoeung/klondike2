@@ -17,10 +17,9 @@ import 'game_rules.dart';
 /// - Deal: 6 face-up cards to each tableau (total 36 cards). Remaining cards go to waste.
 /// - Waste is inert (no draws, no moves from it).
 /// - Stock is unused (no base card needed).
-/// - Turn-based: only the active tableau index may move exactly one top card
-///   to its matching foundation (same column). After a successful move the turn
-///   advances (mod 6). If a tableau becomes empty early, it still participates
-///   in turn rotation (potentially skipping if empty and cannot move).
+/// - Any single face-up card from a tableau column may be moved directly to
+///   its corresponding foundation column (same index). Interior cards do NOT
+///   drag any cards that were above them; those cards collapse downward.
 class CatTeRules implements GameRules {
   // Track which tableau's turn it is. This is mutable game state.
   int currentTurn = 0;
@@ -116,11 +115,11 @@ class CatTeRules implements GameRules {
 
   @override
   bool canMoveFromTableau(Card card) {
-    // Any face-up top card may be dragged (move validation happens on drop).
+    // Any single face-up card may be selected (top or interior). Interior
+    // selection will not bring along cards above it.
     final pile = card.pile;
     if (pile is! TableauPile) return false;
-    final isTop = pile.cardsOnTop(card).isEmpty;
-    return card.isFaceUp && isTop;
+    return card.isFaceUp;
   }
 
   @override

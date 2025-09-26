@@ -6,6 +6,7 @@ import 'package:flame/components.dart';
 import '../klondike_game.dart';
 import '../pile.dart';
 import 'card.dart';
+import '../rules/catte_rules.dart';
 
 class TableauPile extends PositionComponent
     with HasGameReference<KlondikeGame>
@@ -65,6 +66,19 @@ class TableauPile extends PositionComponent
     assert(_cards.contains(card) && card.isFaceUp);
     debugPrint('removeCard called for card: $card, method: $method');
     final index = _cards.indexOf(card);
+
+    // CatTe variant: allow plucking a single interior card without taking the stack above it.
+    if (game.rules is CatTeRules) {
+      _cards.removeAt(index);
+      // Reassign priorities to maintain stable ordering.
+      for (var i = 0; i < _cards.length; i++) {
+        _cards[i].priority = i;
+      }
+      layOutCards();
+      return;
+    }
+
+    // Klondike (and other stacking games): remove the card and everything above it.
     _cards.removeRange(index, _cards.length);
     if (_cards.isNotEmpty && _cards.last.isFaceDown) {
       debugPrint('removeCard: flipping top card');

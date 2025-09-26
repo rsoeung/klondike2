@@ -15,6 +15,7 @@ import 'foundation_pile.dart';
 import 'stock_pile.dart';
 import 'tableau_pile.dart';
 import '../rules/klondike_rules.dart';
+import '../rules/catte_rules.dart';
 
 class Card extends PositionComponent
     with DragCallbacks, TapCallbacks, HasWorldReference<KlondikeWorld> {
@@ -262,10 +263,15 @@ class Card extends PositionComponent
       _isDragging = true;
       priority = 100;
       if (pile is TableauPile) {
-        final extraCards = (pile! as TableauPile).cardsOnTop(this);
-        for (final card in extraCards) {
-          card.priority = attachedCards.length + 101;
-          attachedCards.add(card);
+        if (world.game.rules is CatTeRules) {
+          // In CatTe we always drag a single card (no building sequences).
+          attachedCards.clear();
+        } else {
+          final extraCards = (pile! as TableauPile).cardsOnTop(this);
+          for (final card in extraCards) {
+            card.priority = attachedCards.length + 101;
+            attachedCards.add(card);
+          }
         }
       }
     }
