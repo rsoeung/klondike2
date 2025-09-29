@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/animation.dart';
+import 'package:flutter/foundation.dart';
 
 import '../klondike_game.dart';
 import '../klondike_world.dart';
@@ -16,6 +17,7 @@ import 'stock_pile.dart';
 import 'tableau_pile.dart';
 import '../rules/klondike_rules.dart';
 import '../rules/catte_rules.dart';
+import '../rules/catte_trick_rules.dart';
 
 class Card extends PositionComponent
     with DragCallbacks, TapCallbacks, HasWorldReference<KlondikeWorld> {
@@ -283,6 +285,25 @@ class Card extends PositionComponent
       _isDragging = false;
       return;
     }
+    // In CatTeTrickRules we do not support free dragging; user taps (or short drags upwards) to play.
+    if (world.game.rules is CatTeTrickRules) {
+      final rules = world.game.rules as CatTeTrickRules;
+      // Legal drag only if card is a legal play (not just movable) to prevent bypass of suit rule.
+      if (rules.isLegalPlay(this)) {
+        _isDragging = true;
+        _whereCardStarted = position.clone();
+        attachedCards.clear();
+        priority = 150; // elevate above others while dragging
+        debugPrint('[DRAG-START] Legal drag begin for $this');
+      } else {
+        // Treat as selection attempt instead of drag.
+        _isDragging = false;
+        // Attempt selection (may enable Fold button even if not legal to play).
+        rules.selectCard(this);
+        debugPrint('[DRAG-START] Blocked drag (illegal play) for $this');
+      }
+      return; // No multi-card drags in trick mode.
+    }
     // Clone the position, else _whereCardStarted changes as the position does.
     _whereCardStarted = position.clone();
     attachedCards.clear();
@@ -320,9 +341,20 @@ class Card extends PositionComponent
   void onDragEnd(DragEndEvent event) {
     super.onDragEnd(event);
     if (!_isDragging) {
-      return;
+      return; // Nothing to finalize.
     }
     _isDragging = false;
+
+    // Trick mode drag -> treat drop as play attempt (regardless of distance), then snap back if illegal.
+    if (world.game.rules is CatTeTrickRules) {
+      final rules = world.game.rules as CatTeTrickRules;
+      final success = rules.playCard(this);
+      if (!success) {
+        // Revert to origin if play rejected.
+        doMove(_whereCardStarted, onComplete: () => pile?.returnCard(this));
+      }
+      return;
+    }
 
     // If short drag, return card to Pile and treat it as having been tapped.
     final shortDrag = (position - _whereCardStarted).length < KlondikeGame.dragTolerance;
@@ -392,6 +424,13 @@ class Card extends PositionComponent
 
   @override
   void onTapUp(TapUpEvent event) {
+    // For trick CatTe, tapping attempts to play (if legal). Long term could differentiate fold.
+    final r = world.game.rules;
+    if (r is CatTeTrickRules) {
+      // Tap toggles selection; no immediate play.
+      r.selectCard(this);
+      return;
+    }
     handleTapUp();
   }
 

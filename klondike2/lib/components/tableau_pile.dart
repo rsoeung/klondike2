@@ -7,6 +7,7 @@ import '../klondike_game.dart';
 import '../pile.dart';
 import 'card.dart';
 import '../rules/catte_rules.dart';
+import '../rules/catte_trick_rules.dart';
 
 class TableauPile extends PositionComponent with HasGameReference<KlondikeGame> implements Pile {
   TableauPile({super.position}) : super(size: KlondikeGame.cardSize) {
@@ -15,6 +16,9 @@ class TableauPile extends PositionComponent with HasGameReference<KlondikeGame> 
 
   /// Which cards are currently placed onto this pile.
   final List<Card> _cards = [];
+
+  /// Read-only exposure of cards for non-Klondike rule engines (e.g., CatTe).
+  List<Card> get cards => List.unmodifiable(_cards);
   final Vector2 _fanOffset1 = Vector2(0, KlondikeGame.cardHeight * 0.05);
   final Vector2 _fanOffset2 = Vector2(0, KlondikeGame.cardHeight * 0.2);
 
@@ -55,12 +59,18 @@ class TableauPile extends PositionComponent with HasGameReference<KlondikeGame> 
 
   @override
   void removeCard(Card card, MoveMethod method) {
-    assert(_cards.contains(card) && card.isFaceUp);
+    // In CatTe trick mode a card may be removed after being intentionally folded
+    // face-down. So only enforce face-up invariant for Klondike (stacking) mode.
+    if (game.rules is! CatTeTrickRules) {
+      assert(_cards.contains(card) && card.isFaceUp);
+    } else {
+      assert(_cards.contains(card));
+    }
     debugPrint('removeCard called for card: $card, method: $method');
     final index = _cards.indexOf(card);
 
-    // CatTe variant: allow plucking a single interior card without taking the stack above it.
-    if (game.rules is CatTeRules) {
+    // CatTe variants: allow plucking a single interior card without taking the stack above it.
+    if (game.rules is CatTeRules || game.rules is CatTeTrickRules) {
       _cards.removeAt(index);
       // Reassign priorities to maintain stable ordering.
       for (var i = 0; i < _cards.length; i++) {
