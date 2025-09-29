@@ -211,13 +211,23 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       final r = rules as CatTeTrickRules;
       for (var i = 0; i < tableauPiles.length; i++) {
         final pile = tableauPiles[i];
-        // Attach / update a highlight component.
+
+        // Current player highlight
         final existing = pile.children.whereType<CatTeHighlightFrame>().firstOrNull;
         final active = r.currentPlayerIndex == i && r.winnerIndex == null;
         if (active && existing == null) {
           pile.add(CatTeHighlightFrame());
         } else if (!active && existing != null) {
           existing.removeFromParent();
+        }
+
+        // Leader indicator
+        final leaderIndicator = pile.children.whereType<CatTeLeaderIndicator>().firstOrNull;
+        final isLeader = r.leaderIndex == i && r.winnerIndex == null;
+        if (isLeader && leaderIndicator == null) {
+          pile.add(CatTeLeaderIndicator());
+        } else if (!isLeader && leaderIndicator != null) {
+          leaderIndicator.removeFromParent();
         }
       }
       // Only sync buttons when selection changes to avoid interference

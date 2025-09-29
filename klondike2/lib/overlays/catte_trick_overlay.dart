@@ -1,7 +1,5 @@
-import 'dart:ui';
-
 import 'package:flame/components.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../klondike_game.dart';
 import '../rules/catte_trick_rules.dart';
@@ -31,6 +29,7 @@ class CatTeTrickStatusOverlay extends PositionComponent with HasGameReference<Kl
     if (winner == null) {
       buf.write('Trick $trick / 6  ');
       buf.write('Turn: P${rules.currentPlayerIndex + 1}  ');
+      buf.write('Leader: P${rules.leaderIndex + 1}  ');
       buf.write('Region: ${rules.region.name} (tap)\n');
       final lead = rules.leadSuit;
       if (lead != null && rules.trickNumber < 6) {
@@ -115,6 +114,70 @@ class CatTeHighlightFrame extends PositionComponent {
     final rect = Rect.fromLTWH(0, 0, parentSize.x, parentSize.y);
     final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(KlondikeGame.cardRadius));
     canvas.drawRRect(rrect, _paint);
+  }
+}
+
+/// A crown indicator to show which player is the leader of the current trick.
+class CatTeLeaderIndicator extends PositionComponent {
+  CatTeLeaderIndicator() : super(priority: 1000);
+
+  static final _paint = Paint()
+    ..style = PaintingStyle.fill
+    ..color = const Color(0xFFFFD700); // Gold color
+
+  static final _strokePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth =
+        5 // Much thicker outline
+    ..color = const Color(0xFF8B4513); // Brown outline
+
+  @override
+  void render(Canvas canvas) {
+    final parentSize = (parent as PositionComponent).size;
+    final centerX = parentSize.x / 2;
+    final topY = -130.0; // Position higher above the pile
+
+    // Draw a larger, more visible crown shape
+    final crownPath = Path();
+    final crownWidth = 200.0; // Much larger width
+    final crownHeight = 100.0; // Much larger height
+
+    // Crown base
+    crownPath.moveTo(centerX - crownWidth / 2, topY + crownHeight);
+    crownPath.lineTo(centerX + crownWidth / 2, topY + crownHeight);
+    crownPath.lineTo(centerX + crownWidth / 2, topY + crownHeight * 0.7);
+
+    // Crown peaks (more pronounced)
+    crownPath.lineTo(centerX + crownWidth * 0.3, topY + crownHeight * 0.2);
+    crownPath.lineTo(centerX + crownWidth * 0.15, topY + crownHeight * 0.4);
+    crownPath.lineTo(centerX, topY);
+    crownPath.lineTo(centerX - crownWidth * 0.15, topY + crownHeight * 0.4);
+    crownPath.lineTo(centerX - crownWidth * 0.3, topY + crownHeight * 0.2);
+    crownPath.lineTo(centerX - crownWidth / 2, topY + crownHeight * 0.7);
+    crownPath.close();
+
+    // Draw crown with shadow effect
+    final shadowPath = Path.from(crownPath);
+    shadowPath.shift(const Offset(3, 3));
+    canvas.drawPath(shadowPath, Paint()..color = const Color(0x88000000)); // Shadow
+    canvas.drawPath(crownPath, _paint);
+    canvas.drawPath(crownPath, _strokePaint);
+
+    // Add larger "LEADER" text below the crown
+    final textSpan = TextSpan(
+      text: 'LEADER',
+      style: TextStyle(
+        color: const Color(0xFFFFFFFF),
+        fontSize: 18, // Larger font
+        fontWeight: FontWeight.bold,
+        shadows: [
+          Shadow(blurRadius: 2.0, color: const Color(0xFF000000), offset: Offset(1.0, 1.0)),
+        ],
+      ),
+    );
+    final textPainter = TextPainter(text: textSpan, textDirection: TextDirection.ltr);
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(centerX - textPainter.width / 2, topY + crownHeight + 8));
   }
 }
 
