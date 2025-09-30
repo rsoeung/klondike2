@@ -16,6 +16,7 @@ import 'klondike_game.dart';
 import 'rules/game_rules.dart';
 import 'rules/klondike_rules.dart';
 import 'rules/catte_trick_rules.dart';
+import 'rules/eat_reds_rules.dart';
 // highlight / overlay helpers
 import 'overlays/catte_trick_overlay.dart';
 
@@ -115,6 +116,12 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       nextButtonOffset = 3;
     }
     addButton('Have fun', gameMidX + nextButtonOffset * cardSpaceWidth, Action.haveFun);
+
+    // EatReds player count button appears right after "Have Fun" when that ruleset is active
+    if (rules is EatRedsRules) {
+      final playerButtonX = gameMidX + (nextButtonOffset + 1) * cardSpaceWidth;
+      addEatRedsPlayerButton(playerButtonX, rules as EatRedsRules);
+    }
 
     // CatTe trick action buttons (Play / Fold) appear when that ruleset active.
     if (rules is CatTeTrickRules) {
@@ -273,6 +280,30 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     btn.activeColor = activeColor;
   }
 
+  void addEatRedsPlayerButton(double buttonX, EatRedsRules rules) {
+    final label = '${rules.playerCount} Players';
+    debugPrint('Adding EatReds player count button: $label at $buttonX');
+    final button = FlatButton(
+      label,
+      size: Vector2(KlondikeGame.cardWidth, 0.6 * topGap),
+      position: Vector2(buttonX, topGap / 2),
+      onReleased: () {
+        // Cycle through player counts 2-4
+        final current = rules.playerCount;
+        final next = current >= 4 ? 2 : current + 1;
+        rules.setPlayerCount(next);
+        // Save to game object for persistence
+        game.eatRedsPlayerCount = next;
+        debugPrint('Changed EatReds players: $current -> $next');
+        // Trigger new deal to apply player count change
+        game.action = Action.newDeal;
+        game.rebuildWorld();
+      },
+    );
+    add(button);
+    _controlButtons.add(button);
+  }
+
   void addRulesToggleButton(double buttonX) {
     String labelFor(RulesVariant v) {
       switch (v) {
@@ -282,6 +313,8 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
           return 'CatTe Simple';
         case RulesVariant.catteTrick:
           return 'CatTe Trick';
+        case RulesVariant.eatReds:
+          return 'Eat Reds';
       }
     }
 

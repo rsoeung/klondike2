@@ -178,6 +178,34 @@ The side pot is completely separate from the main game play; a player need not w
 - **Game State Management**: Turn advancement, trick resolution, winner detection
 
 ---
+## End of Cat Te Instructions
+- --- IGNORE ---
+
+## Game: Eat Reds (Also known as Chinese Ten)
+- **Objective**: The object of this game is to amass the highest score by capturing red cards from the layout. Cards are captured by pairing them with another card, such that the total pip value of the pair is ten. Cards that already have a pip value of ten are paired by matching.
+
+### Setup
+To play Chinese Ten, all you need is a standard 52-card deck of playing cards.
+
+Divide 24 by the number of players in the game. This number is the number of cards to deal each player. That is, in a two player game, deal twelve cards to each. In a three-player game, deal eight cards to each. In a four-player game, deal six to each. Place the stub in the center of the table, face down, forming the stock. Turn four cards face up from the top of the stock, putting them at the corners of the stock.
+
+### Game play
+The player to the dealer’s left goes first. A player’s turn begins with them playing a card from their hand face up to the table. If the pip value of this card plus the pip value of a card already on the table add up to ten, the player captures both cards. For example, a 7 on the table can be captured by playing a 3. A player can capture face cards and 10s on the table by playing another card of the same rank.
+
+When a player captures a card, they place both it and the card used to capture it in a face-down won-cards pile on the table in front of them. Some cultural regions (Khmer, Laos, Vietnamese, Chinese) place the captured card face up for other players to see and strategize. Players do not add cards to their hands; the cards they are dealt initially are the only cards they will have for the whole game.
+
+After playing a card from their hand, the player turns a card up from the stock. If this card can capture a card on the table, the player makes the capture. Otherwise, the card is simply left on the table with the others. The turn then passes to the left.
+
+Special rules apply to face cards, 10s, and 5s, to prevent them from becoming uncapturable. If the initial layout includes a three-of-a-kind of one of these ranks, the fourth card of that rank captures the other three. When the four cards of the initial layout are all face cards, 10s, or 5s, the dealer captures all four of these cards before the first player’s turn.
+
+### Scoring
+The game should end with the last player running out of cards on the same turn the deck runs out, with the last card in the deck capturing the last card in the layout. Each player then turns over their won-cards, if not already face up, pile and calculates its value, as follows:
+
+All black cards: 0 points
+Red aces: 20 points each
+Red face cards, 10s, and 9s: 10 points each
+All other red cards: Pip value
+The player with the highest score wins the game.
 
 # Add additional games below using the same format.
 # klondike2
