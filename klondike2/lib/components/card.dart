@@ -285,22 +285,18 @@ class Card extends PositionComponent
       _isDragging = false;
       return;
     }
-    // In CatTeTrickRules we do not support free dragging; user taps (or short drags upwards) to play.
+    // In CatTeTrickRules allow dragging any face-up card, but restrict playing via playCard method
     if (world.game.rules is CatTeTrickRules) {
-      final rules = world.game.rules as CatTeTrickRules;
-      // Legal drag only if card is a legal play (not just movable) to prevent bypass of suit rule.
-      if (rules.isLegalPlay(this)) {
+      // Allow dragging any face-up card in a tableau pile
+      if (pile is TableauPile && isFaceUp) {
         _isDragging = true;
         _whereCardStarted = position.clone();
         attachedCards.clear();
         priority = 150; // elevate above others while dragging
-        debugPrint('[DRAG-START] Legal drag begin for $this');
+        debugPrint('[DRAG-START] Drag allowed for $this');
       } else {
-        // Treat as selection attempt instead of drag.
         _isDragging = false;
-        // Attempt selection (may enable Fold button even if not legal to play).
-        rules.selectCard(this);
-        debugPrint('[DRAG-START] Blocked drag (illegal play) for $this');
+        debugPrint('[DRAG-START] Drag blocked - not face-up tableau card: $this');
       }
       return; // No multi-card drags in trick mode.
     }
@@ -345,12 +341,22 @@ class Card extends PositionComponent
     }
     _isDragging = false;
 
-    // Trick mode drag -> treat drop as play attempt (regardless of distance), then snap back if illegal.
+    // Trick mode drag -> only play if dropped on a foundation pile, otherwise return to tableau
     if (world.game.rules is CatTeTrickRules) {
       final rules = world.game.rules as CatTeTrickRules;
-      final success = rules.playCard(this);
-      if (!success) {
-        // Revert to origin if play rejected.
+      
+      // Check what's under the center-point of this card when dropped
+      final dropPiles = parent!.componentsAtPoint(position + size / 2).whereType<Pile>().toList();
+      
+      if (dropPiles.isNotEmpty && dropPiles.first is FoundationPile) {
+        // Dropped on a foundation pile - attempt to play the card
+        final success = rules.playCard(this);
+        if (!success) {
+          // Play rejected - return to original position
+          doMove(_whereCardStarted, onComplete: () => pile?.returnCard(this));
+        }
+      } else {
+        // Not dropped on a foundation pile - just return to tableau
         doMove(_whereCardStarted, onComplete: () => pile?.returnCard(this));
       }
       return;
