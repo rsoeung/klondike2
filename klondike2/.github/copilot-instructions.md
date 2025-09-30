@@ -122,15 +122,60 @@ One other common variation is the maintenance of a side pot. In addition to the 
 The side pot is completely separate from the main game play; a player need not win the main round, or even win a single trick, to claim the side pot.
 
 ### Digital Implementation Notes
-- Uses Flame engine for Flutter
-- Poker table layout with 6 fixed seat positions
-- Real-time validation of suit-following rules
-- Strategic folding system allowing any card to be folded at any time
-- Visual feedback for legal/illegal moves and folding options
+- Uses Flame engine for Flutter with component-based architecture
+- Linear layout with 6 tableau piles (player hands) and 6 foundation piles (played cards)
+- Real-time validation of suit-following rules and must-beat requirements
+- Strategic folding system allowing any card to be folded at any time (except leader must play)
+- Visual feedback system with multiple indicator types:
+  - **Legal Card Highlighting**: Blue border on cards that can be legally played
+  - **Current Player Highlighting**: Golden frame around active player's tableau pile
+  - **Leader Indicator**: Crown icon above the trick leader's tableau pile
+  - **Selection Highlighting**: Green border on currently selected card
+- Enhanced drag-and-drop system:
+  - Any face-up card can be dragged from any tableau pile
+  - Cards only play when dropped on foundation piles
+  - Illegal plays or drops elsewhere return card to origin
+- Status overlay showing:
+  - Current trick number (1-6)
+  - Current turn player (PX)
+  - Current trick leader (PX)
+  - Region variant (Khmer/Laos/Vietnamese - tap to cycle)
+  - Lead suit requirements and folding rules
+  - Selected card information
+- Action buttons for Play/Fold operations
 - Debug logging for rule enforcement and strategic decisions
-- Persistent played card display showing all face-up and face-down cards
-- Player turn management with clear action choices (Play or Fold)
+- Persistent played card display showing all face-up and face-down cards stacked on foundation piles
+- Player turn management with automatic advancement after each play/fold
 - Winner determination based on highest card of led suit (excluding folded cards)
+- Instant win detection for special hands (four-of-a-kind, flush, low hand)
+- Elimination system for Laos/Vietnamese variants after 4th trick
+- Must-beat rule enforcement: players with lead suit cards must beat current best if possible
+- Comprehensive rule validation preventing illegal suit violations
+
+### User Interaction Methods
+1. **Card Selection**: Tap any card in current player's hand to select/deselect
+2. **Drag and Drop**: 
+   - Drag any face-up card from any tableau pile
+   - Drop on foundation pile to attempt play
+   - Drop elsewhere returns card to origin
+3. **Button Actions**:
+   - **Play Button**: Plays currently selected card (if legal)
+   - **Fold Button**: Folds currently selected card face-down
+   - **Region Toggle**: Tap region name in status to cycle variants
+4. **Visual Feedback**:
+   - Blue highlighting shows legal plays for current player
+   - Golden frame indicates current player's turn
+   - Crown icon shows trick leader
+   - Green border shows selected card
+
+### Technical Architecture
+- **CatTeTrickRules**: Core game logic and rule enforcement
+- **CatTeTrickStatusOverlay**: Real-time game state display
+- **CatTeHighlightFrame**: Current player visual indicator
+- **CatTeLeaderIndicator**: Crown icon for trick leader
+- **Card Component**: Enhanced drag/drop with smart play detection
+- **Foundation/Tableau Piles**: Separate areas for hands vs played cards
+- **Game State Management**: Turn advancement, trick resolution, winner detection
 
 ---
 

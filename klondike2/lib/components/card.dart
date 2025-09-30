@@ -344,10 +344,10 @@ class Card extends PositionComponent
     // Trick mode drag -> only play if dropped on a foundation pile, otherwise return to tableau
     if (world.game.rules is CatTeTrickRules) {
       final rules = world.game.rules as CatTeTrickRules;
-      
+
       // Check what's under the center-point of this card when dropped
       final dropPiles = parent!.componentsAtPoint(position + size / 2).whereType<Pile>().toList();
-      
+
       if (dropPiles.isNotEmpty && dropPiles.first is FoundationPile) {
         // Dropped on a foundation pile - attempt to play the card
         final success = rules.playCard(this);
