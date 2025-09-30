@@ -18,6 +18,7 @@ import 'tableau_pile.dart';
 import '../rules/klondike_rules.dart';
 import '../rules/catte_rules.dart';
 import '../rules/catte_trick_rules.dart';
+import '../rules/eat_reds_rules.dart';
 
 class Card extends PositionComponent
     with DragCallbacks, TapCallbacks, HasWorldReference<KlondikeWorld> {
@@ -36,6 +37,10 @@ class Card extends PositionComponent
   // tolerances as for regular cards (see KlondikeGame.dragTolerance) and using
   // the same event-handling code, but with different handleTapUp() methods.
   final bool isBaseCard;
+
+  // Selection state for EatReds card pairing
+  bool _isSelected = false;
+  bool get isSelected => _isSelected;
 
   bool _faceUp = false;
   bool _isAnimatedFlip = false;
@@ -74,9 +79,24 @@ class Card extends PositionComponent
     } else {
       _renderBack(canvas);
     }
+
+    // Add selection highlighting for EatReds
+    if (_isSelected && world.game.rules is EatRedsRules) {
+      debugPrint('Rendering selection highlight for ${rank} of ${suit}');
+      _renderSelectionHighlight(canvas);
+    }
   }
 
   static final Paint backBackgroundPaint = Paint()..color = const Color(0xff380c02);
+  static final Paint selectionPaint = Paint()
+    ..color =
+        const Color(0xFF00FF00) // Bright green for better visibility
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 6.0; // Thicker border for better visibility
+  static final Paint selectionBackgroundPaint = Paint()
+    ..color =
+        const Color(0x4400FF00) // Semi-transparent green background
+    ..style = PaintingStyle.fill;
   static final Paint backBorderPaint1 = Paint()
     ..color = const Color(0xffdbaf58)
     ..style = PaintingStyle.stroke
@@ -101,6 +121,13 @@ class Card extends PositionComponent
 
   void _renderBaseCard(Canvas canvas) {
     canvas.drawRRect(cardRRect, backBorderPaint1);
+  }
+
+  void _renderSelectionHighlight(Canvas canvas) {
+    // Draw green background and border for selected cards
+    canvas.drawRRect(cardRRect, selectionBackgroundPaint); // Background first
+    canvas.drawRRect(cardRRect, selectionPaint); // Border on top
+    debugPrint('Selection highlight rendered with background and border');
   }
 
   // Front face styling: white background, red suits red, black suits black.
@@ -437,6 +464,12 @@ class Card extends PositionComponent
       r.selectCard(this);
       return;
     }
+    if (r is EatRedsRules) {
+      // Tap selects cards for manual pairing - don't fall through to handleTapUp
+      // This prevents unwanted card movement during selection
+      r.handleCardTap(this);
+      return; // Always return here to prevent card movement
+    }
     handleTapUp();
   }
 
@@ -575,6 +608,20 @@ class Card extends PositionComponent
         },
       ),
     );
+  }
+
+  /// Set the selection state for EatReds card pairing
+  void setSelected(bool selected) {
+    if (_isSelected != selected) {
+      _isSelected = selected;
+      debugPrint('Card selection state changed to: $selected for ${rank} of ${suit}');
+    }
+  }
+
+  /// Update visual highlighting based on selection and game rules
+  void updateHighlighting() {
+    // This method can be expanded to handle visual highlighting
+    // For now, selection highlighting is handled in the render method
   }
 
   //#endregion

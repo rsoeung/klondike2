@@ -6,6 +6,8 @@ import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 
 import 'components/card.dart';
+import 'components/eat_reds_play_button.dart';
+import 'components/eat_reds_score_display.dart';
 import 'components/flat_button.dart';
 import 'components/foundation_pile.dart';
 import 'components/stock_pile.dart';
@@ -38,6 +40,10 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
 
   // Track last selected card to avoid unnecessary button syncs
   Card? _lastSelectedCard;
+
+  // EatReds UI components
+  EatRedsPlayButton? _eatRedsPlayButton;
+  final List<EatRedsScoreDisplay> _eatRedsScoreDisplays = [];
 
   @override
   Future<void> onLoad() async {
@@ -121,6 +127,8 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     if (rules is EatRedsRules) {
       final playerButtonX = gameMidX + (nextButtonOffset + 1) * cardSpaceWidth;
       addEatRedsPlayerButton(playerButtonX, rules as EatRedsRules);
+      // Add Play button and score displays for EatReds
+      addEatRedsUIComponents(rules as EatRedsRules);
     }
 
     // CatTe trick action buttons (Play / Fold) appear when that ruleset active.
@@ -304,6 +312,49 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     _controlButtons.add(button);
   }
 
+  void addEatRedsUIComponents(EatRedsRules rules) {
+    // Clear existing EatReds UI components
+    if (_eatRedsPlayButton != null) {
+      remove(_eatRedsPlayButton!);
+      _eatRedsPlayButton = null;
+    }
+    for (final scoreDisplay in _eatRedsScoreDisplays) {
+      remove(scoreDisplay);
+    }
+    _eatRedsScoreDisplays.clear();
+
+    // Add Play button to the left of the layout cards
+    // Layout cards are centered around waste pile position from EatRedsRules
+    final layoutCenterX = 2.5 * cardSpaceWidth + cardGap;
+    final layoutCenterY = 1.5 * cardSpaceHeight + topGap;
+    final playButtonPos = Vector2(
+      layoutCenterX -
+          2.0 * cardSpaceWidth -
+          cardGap, // Two card spaces to the left for more separation
+      layoutCenterY, // Same vertical level as layout center
+    );
+    _eatRedsPlayButton = EatRedsPlayButton(position: playButtonPos);
+    add(_eatRedsPlayButton!);
+
+    // Add score displays above each foundation pile
+    for (var i = 0; i < rules.playerCount; i++) {
+      if (i < foundations.length) {
+        final foundationPos = foundations[i].position;
+        final scorePos = Vector2(
+          foundationPos.x + KlondikeGame.cardWidth / 2, // Center above foundation
+          foundationPos.y - 25, // Above the foundation pile
+        );
+        final scoreDisplay = EatRedsScoreDisplay(playerIndex: i, position: scorePos);
+        _eatRedsScoreDisplays.add(scoreDisplay);
+        add(scoreDisplay);
+      }
+    }
+
+    debugPrint(
+      'Added EatReds UI components: Play button at (${playButtonPos.x}, ${playButtonPos.y}) and ${_eatRedsScoreDisplays.length} score displays',
+    );
+  }
+
   void addRulesToggleButton(double buttonX) {
     String labelFor(RulesVariant v) {
       switch (v) {
@@ -457,6 +508,24 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
         space = length[side] + space;
       }
     }
+  }
+
+  @override
+  void onRemove() {
+    // Clean up EatReds UI components when world is removed
+    cleanupEatRedsUIComponents();
+    super.onRemove();
+  }
+
+  void cleanupEatRedsUIComponents() {
+    if (_eatRedsPlayButton != null) {
+      remove(_eatRedsPlayButton!);
+      _eatRedsPlayButton = null;
+    }
+    for (final scoreDisplay in _eatRedsScoreDisplays) {
+      remove(scoreDisplay);
+    }
+    _eatRedsScoreDisplays.clear();
   }
 }
 

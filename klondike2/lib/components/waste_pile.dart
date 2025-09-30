@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 
 import '../klondike_game.dart';
 import '../pile.dart';
+import '../rules/eat_reds_rules.dart';
 import 'card.dart';
 
 class WastePile extends PositionComponent with HasGameReference<KlondikeGame> implements Pile {
@@ -34,6 +35,16 @@ class WastePile extends PositionComponent with HasGameReference<KlondikeGame> im
   @override
   void acquireCard(Card card) {
     assert(card.isFaceUp);
+
+    // Check if EatReds wants to intercept this card for layout
+    final rules = game.rules;
+    if (rules is EatRedsRules && rules.shouldInterceptWaste()) {
+      // Redirect to layout instead of adding to waste
+      rules.redirectWasteToLayout(card, this);
+      return;
+    }
+
+    // Normal waste pile behavior
     card.pile = this;
     card.position = position;
     card.priority = _cards.length;
