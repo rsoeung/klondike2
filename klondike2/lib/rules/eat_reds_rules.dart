@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' hide Card;
 
 import '../components/card.dart';
 import '../components/foundation_pile.dart';
@@ -9,7 +10,6 @@ import '../components/stock_pile.dart';
 import '../components/tableau_pile.dart';
 import '../components/waste_pile.dart';
 import '../klondike_game.dart';
-import '../klondike_world.dart';
 import '../pile.dart';
 import 'game_rules.dart';
 
@@ -81,6 +81,7 @@ class EatRedsRules implements GameRules {
   int? get gameWinnerIndex => _gameWinnerIndex;
   bool get gameOver => _gameOver;
   bool get awaitingStockDraw => _awaitingStockDraw;
+  int get stockCardsRemaining => _stockCardsRemaining;
   List<Card> get layoutCards => List.unmodifiable(_layoutCards);
   Card? get selectedHandCard => _selectedHandCard;
   Card? get selectedLayoutCard => _selectedLayoutCard;
@@ -93,14 +94,27 @@ class EatRedsRules implements GameRules {
 
   /// Check if a hand card can capture a layout card
   bool _canCapture(Card handCard, Card layoutCard) {
-    // Check for rank matching (face cards, 10s, aces)
-    if (handCard.rank.value >= 10 || handCard.rank.value == 1) {
+    // Get pip values for gameplay (different from scoring values)
+    final handPipValue = _getGameplayValue(handCard);
+    final layoutPipValue = _getGameplayValue(layoutCard);
+
+    // Face cards and 10s are captured by rank matching
+    if ((handCard.rank.value >= 10) || (layoutCard.rank.value >= 10)) {
       return handCard.rank.value == layoutCard.rank.value;
     } else {
-      // Check for sum-to-10 pairing
-      final handValue = handCard.rank.value;
-      final layoutValue = layoutCard.rank.value == 1 ? 1 : layoutCard.rank.value; // Ace = 1
-      return handValue + layoutValue == 10;
+      // All other cards (A, 2-9) are captured by sum-to-10 pairing
+      return handPipValue + layoutPipValue == 10;
+    }
+  }
+
+  /// Get the gameplay/pip value of a card (different from scoring value)
+  int _getGameplayValue(Card card) {
+    if (card.rank.value == 1) {
+      return 1; // Ace = 1 for gameplay
+    } else if (card.rank.value >= 10) {
+      return 10; // Face cards and 10 = 10 for gameplay
+    } else {
+      return card.rank.value; // 2-9 = pip value
     }
   }
 
@@ -118,7 +132,10 @@ class EatRedsRules implements GameRules {
       // This assumes tableaus are indexed by player
       _selectedHandCard = card;
       card.setSelected(true);
-      debugPrint('Selected hand card: ${card.rank} of ${card.suit}');
+      debugPrint('Selected hand card: ${card.rank.label} of ${card.suit.label}');
+
+      // Update capture highlights for layout cards
+      _updateCaptureHighlights();
     }
   }
 
@@ -132,7 +149,7 @@ class EatRedsRules implements GameRules {
 
       _selectedLayoutCard = card;
       card.setSelected(true);
-      debugPrint('Selected layout card: ${card.rank} of ${card.suit}');
+      debugPrint('Selected layout card: ${card.rank.label} of ${card.suit.label}');
     }
   }
 
@@ -146,6 +163,10 @@ class EatRedsRules implements GameRules {
       _selectedLayoutCard!.setSelected(false);
       _selectedLayoutCard = null;
     }
+
+    // Clear capture highlights when selections are cleared
+    _clearCaptureHighlights();
+
     debugPrint('Card selections cleared');
   }
 
@@ -156,9 +177,17 @@ class EatRedsRules implements GameRules {
     final handCard = _selectedHandCard!;
     final layoutCard = _selectedLayoutCard!;
 
+    // Check if "hand card" is actually from layout (stock card)
+    final isStockCardCapture = _layoutCards.contains(handCard);
+
     // Remove cards from their current locations
-    if (handCard.pile is TableauPile) {
+    if (!isStockCardCapture && handCard.pile is TableauPile) {
       (handCard.pile as TableauPile).removeCard(handCard, MoveMethod.tap);
+    }
+
+    // Remove both cards from layout if it's a stock card capture
+    if (isStockCardCapture) {
+      _layoutCards.remove(handCard);
     }
     _layoutCards.remove(layoutCard);
 
@@ -166,14 +195,32 @@ class EatRedsRules implements GameRules {
     _capturedCards[_currentPlayerIndex].add(handCard);
     _capturedCards[_currentPlayerIndex].add(layoutCard);
 
+    debugPrint('Added cards to player $_currentPlayerIndex captured pile:');
+    debugPrint(
+      '  Hand card: ${handCard.rank} of ${handCard.suit} (${handCard.suit.isRed ? "RED" : "BLACK"})',
+    );
+    debugPrint(
+      '  Layout card: ${layoutCard.rank} of ${layoutCard.suit} (${layoutCard.suit.isRed ? "RED" : "BLACK"})',
+    );
+    debugPrint(
+      '  Total captured cards for player $_currentPlayerIndex: ${_capturedCards[_currentPlayerIndex].length}',
+    );
+
     // Move cards to foundation pile (visually)
     _moveCardsToFoundation(handCard, layoutCard, _currentPlayerIndex, foundations);
 
     // Clear selections
     clearSelections();
 
-    // After playing from hand, must draw from stock
-    _awaitingStockDraw = true;
+    if (isStockCardCapture) {
+      // Stock card capture - advance to next player immediately
+      _advanceToNextPlayer();
+      debugPrint('Player $_currentPlayerIndex captured with stock card, advancing to next player');
+    } else {
+      // Regular hand card capture - must draw from stock
+      _awaitingStockDraw = true;
+      debugPrint('Player $_currentPlayerIndex captured with hand card, must draw from stock');
+    }
 
     debugPrint(
       'Player $_currentPlayerIndex captured cards. Score: ${getPlayerScore(_currentPlayerIndex)}',
@@ -206,22 +253,68 @@ class EatRedsRules implements GameRules {
     if (playerIndex >= _capturedCards.length) return 0;
 
     int score = 0;
+    // debugPrint('Calculating score for player $playerIndex:');
     for (final card in _capturedCards[playerIndex]) {
+      int cardPoints = 0;
       if (card.suit.isRed) {
         if (card.rank.value == 1) {
           // Red ace
-          score += 20;
+          cardPoints = 20;
         } else if (card.rank.value >= 9) {
           // Red face cards, 10s, 9s
-          score += 10;
+          cardPoints = 10;
         } else {
           // Other red cards
-          score += card.rank.value;
+          cardPoints = card.rank.value;
         }
+        score += cardPoints;
+        debugPrint('  ${card.rank} of ${card.suit}: +$cardPoints points');
+      } else {
+        debugPrint('  ${card.rank} of ${card.suit}: +0 points (black)');
       }
       // Black cards = 0 points
     }
+    // debugPrint('  Total score for player $playerIndex: $score');
     return score;
+  }
+
+  /// Find the next available position for a layout card, prioritizing the 2x2 grid
+  int _findNextAvailableLayoutPosition() {
+    // Track which positions in the initial 2x2 grid are occupied
+    final occupiedGridPositions = <int>{};
+
+    // For each card in the layout, determine its grid position
+    for (int cardIndex = 0; cardIndex < _layoutCards.length; cardIndex++) {
+      final layoutCard = _layoutCards[cardIndex];
+
+      // Check if this card was placed in one of the initial 4 grid positions
+      // We can determine this by checking if any of the first 4 positions match this card's position
+      final centerPos = Vector2(
+        2.5 * KlondikeGame.cardSpaceWidth + KlondikeGame.cardGap,
+        1.5 * KlondikeGame.cardSpaceHeight + KlondikeGame.topGap,
+      );
+
+      for (int gridPos = 0; gridPos < 4; gridPos++) {
+        final testPos = _getLayoutCardPosition(gridPos, centerPos);
+        final distance = (layoutCard.position - testPos).length;
+
+        if (distance < 5.0) {
+          // Small tolerance for position matching
+          occupiedGridPositions.add(gridPos);
+          break;
+        }
+      }
+    }
+
+    // Find the first available position in the 2x2 grid
+    for (int i = 0; i < 4; i++) {
+      if (!occupiedGridPositions.contains(i)) {
+        return i;
+      }
+    }
+
+    // If all grid positions are occupied, expand beyond the grid
+    return _layoutCards.length;
   }
 
   /// Calculate position for a layout card based on its index in the layout
@@ -234,13 +327,22 @@ class EatRedsRules implements GameRules {
       final offsetY = (row - 0.5) * (KlondikeGame.cardHeight + 15);
       return centerPos + Vector2(offsetX, offsetY);
     } else {
-      // Additional cards arranged in expanding spiral pattern
+      // Additional cards expand to the right in rows
       final extraIndex = index - 4;
-      final radius = 120.0 + (extraIndex ~/ 8) * 40; // Expanding rings
-      final angle = (extraIndex % 8) * (pi * 2 / 8); // 8 positions per ring
-      final offsetX = radius * cos(angle);
-      final offsetY = radius * sin(angle);
-      return centerPos + Vector2(offsetX, offsetY);
+      final cardsPerRow = 4; // Continue with 4 cards per row
+      final row = extraIndex ~/ cardsPerRow;
+      final col = extraIndex % cardsPerRow;
+
+      // Start positioning to the right of the initial 2x2 grid
+      final rightEdgeX =
+          centerPos.x + (KlondikeGame.cardWidth + 20) * 0.5; // Right edge of initial grid
+      final spacing = KlondikeGame.cardWidth + 10; // Horizontal spacing between cards
+      final rowSpacing = KlondikeGame.cardHeight + 15; // Vertical spacing between rows
+
+      final offsetX = rightEdgeX + (col + 1) * spacing; // Start one card width to the right
+      final offsetY = centerPos.y + (row - 0.5) * rowSpacing; // Adjusted to move down half a card
+
+      return Vector2(offsetX, offsetY);
     }
   }
 
@@ -455,8 +557,8 @@ class EatRedsRules implements GameRules {
   bool attemptCapture(Card playedCard, Vector2 centerPos) {
     final captures = <Card>[];
 
-    // Check for rank matching (face cards, 10s)
-    if (playedCard.rank.value >= 10 || playedCard.rank.value == 1) {
+    // Face cards and 10s are captured by rank matching
+    if (playedCard.rank.value >= 10) {
       for (final layoutCard in _layoutCards) {
         if (layoutCard.rank.value == playedCard.rank.value) {
           captures.add(layoutCard);
@@ -464,10 +566,10 @@ class EatRedsRules implements GameRules {
         }
       }
     } else {
-      // Check for sum-to-10 pairing
-      final playedValue = playedCard.rank.value;
+      // All other cards (A, 2-9) are captured by sum-to-10 pairing
+      final playedValue = _getGameplayValue(playedCard);
       for (final layoutCard in _layoutCards) {
-        final layoutValue = layoutCard.rank.value == 1 ? 1 : layoutCard.rank.value; // Ace = 1
+        final layoutValue = _getGameplayValue(layoutCard);
         if (playedValue + layoutValue == 10) {
           captures.add(layoutCard);
           break; // Only capture one card per turn
@@ -503,72 +605,24 @@ class EatRedsRules implements GameRules {
 
   // Flag to intercept the next card that goes to waste pile
   bool _interceptNextWasteDraw = false;
-  int _cardsInterceptedThisDraw = 0; // Track how many cards intercepted from current stock draw
 
   /// Check if we should intercept waste pile operations for EatReds
-  bool shouldInterceptWaste() {
-    if (!_interceptNextWasteDraw) return false;
-
-    // Only intercept the first card from a multi-card stock draw
-    if (_cardsInterceptedThisDraw >= 1) {
-      return false;
-    }
-
-    return true;
-  }
+  bool shouldInterceptWaste() => _interceptNextWasteDraw;
 
   /// Handle redirecting a card from waste to layout
   void redirectWasteToLayout(Card card, WastePile waste) {
     if (!shouldInterceptWaste()) return;
 
-    _cardsInterceptedThisDraw++;
-    debugPrint(
-      'Intercepting card for layout: ${card.rank} of ${card.suit} (card #$_cardsInterceptedThisDraw)',
-    );
+    // Disable further interception for this stock draw
+    _interceptNextWasteDraw = false;
+    _awaitingStockDraw = false;
+    debugPrint('Intercepting card for layout: ${card.rank} of ${card.suit}');
+    debugPrint('EatReds: Stock draw completed, disabling further draws');
 
-    // After intercepting first card, disable further interception for this stock draw
-    if (_cardsInterceptedThisDraw >= 1) {
-      _interceptNextWasteDraw = false;
-    }
+    // Don't advance to next player yet - check for capture opportunities first
 
-    // Find the first empty position in the layout grid
-    // Check positions 0-3 first (the initial 2x2 grid), then expand outward
-    int targetIndex = _layoutCards.length; // Default to next position
-
-    // For the initial 4 positions, try to find an empty spot
-    if (_layoutCards.length < 4) {
-      // Find first available position in the 2x2 grid
-      final availablePositions = <int>[];
-      for (int i = 0; i < 4; i++) {
-        availablePositions.add(i);
-      }
-
-      // Remove positions that are occupied
-      final occupiedPositions = <int>[];
-      for (final layoutCard in _layoutCards) {
-        // Calculate which grid position this card occupies based on its current position
-        final cardPos = layoutCard.position;
-        final wastePos = waste.position;
-        final relativePos = cardPos - wastePos;
-
-        // Determine grid position from relative coordinates
-        for (int i = 0; i < 4; i++) {
-          final testPos = _getLayoutCardPosition(i, wastePos);
-          final testRelative = testPos - wastePos;
-          if ((testRelative - relativePos).length < 10) {
-            // Small tolerance for position matching
-            occupiedPositions.add(i);
-            break;
-          }
-        }
-      }
-
-      availablePositions.removeWhere((pos) => occupiedPositions.contains(pos));
-
-      if (availablePositions.isNotEmpty) {
-        targetIndex = availablePositions.first;
-      }
-    }
+    // Find the first available position in the 2x2 grid, then expand outward
+    int targetIndex = _findNextAvailableLayoutPosition();
 
     final targetPos = _getLayoutCardPosition(targetIndex, waste.position);
 
@@ -583,58 +637,139 @@ class EatRedsRules implements GameRules {
           'Drew card from stock to layout: ${card.rank} of ${card.suit} at position $targetIndex',
         );
 
-        // Player can now make another selection
-        _awaitingStockDraw = false;
-
         // Clear any existing selections to start fresh
         clearSelections();
+
+        // Check if the new stock card can capture any layout cards
+        _evaluateStockCardCapture(card);
       },
     );
 
     _stockCardsRemaining--;
   }
 
-  void _endGame() {
-    _gameOver = true;
-
-    // Calculate scores
-    final scores = <int, int>{};
-    for (var i = 0; i < playerCount; i++) {
-      scores[i] = _calculateScore(_capturedCards[i]);
-    }
-
-    // Find winner (highest score)
-    var maxScore = -1;
-    for (final entry in scores.entries) {
-      if (entry.value > maxScore) {
-        maxScore = entry.value;
-        _gameWinnerIndex = entry.key;
-      }
-    }
-
-    debugPrint(
-      'Game over! Scores: $scores. Winner: Player $_gameWinnerIndex with $maxScore points.',
-    );
+  /// Advance to the next player's turn
+  void _advanceToNextPlayer() {
+    _currentPlayerIndex = (_currentPlayerIndex + 1) % _playerCount;
+    debugPrint('Turn advanced to Player $_currentPlayerIndex');
   }
 
-  int _calculateScore(List<Card> cards) {
-    var score = 0;
-    for (final card in cards) {
-      if (card.suit.value <= 1) {
-        // Hearts (0) and Diamonds (1) are red
-        if (card.rank.value == 1) {
-          // Red Ace
-          score += 20;
-        } else if (card.rank.value >= 9) {
-          // Red face cards, 10s, 9s
-          score += 10;
-        } else {
-          score += card.rank.value; // Pip value
+  /// Allow player to skip stock card capture and advance to next player
+  void skipStockCapture() {
+    if (_selectedHandCard != null && _layoutCards.contains(_selectedHandCard)) {
+      // Clear selections and advance turn
+      clearSelections();
+      _advanceToNextPlayer();
+      debugPrint('Player skipped stock card capture, advancing to next player');
+    }
+  }
+
+  /// Check if current player has any valid capture moves
+  bool currentPlayerHasValidCaptures() {
+    if (_gameOver || _awaitingStockDraw) return false;
+
+    // Get current player's tableau from the world
+    // We need to access the game world to get tableaus
+    try {
+      // Get tableaus from captured cards context (we know tableaus exist during gameplay)
+      if (_capturedCards.isEmpty) return false;
+
+      // Find current player's hand cards by checking each layout card's potential game reference
+      // This is a workaround since we don't have direct access to world here
+      // We'll check if any hand cards can capture layout cards by using a more direct approach
+
+      // For now, return true to allow selection - the actual validation will happen in canPlay
+      return true;
+    } catch (e) {
+      debugPrint('Error checking valid captures: $e');
+      return true; // Default to allowing play
+    }
+  }
+
+  /// Check if a non-capturing play is allowed (only when no captures are possible)
+  bool canPlayNonCapturing() {
+    if (_awaitingStockDraw) return false;
+
+    // Check if the currently selected hand card can capture any layout cards
+    if (_selectedHandCard != null && !_layoutCards.contains(_selectedHandCard)) {
+      // This is a hand card - check if it can capture any layout cards
+      for (final layoutCard in _layoutCards) {
+        if (_canCapture(_selectedHandCard!, layoutCard)) {
+          return false; // Cannot add to layout when captures are available
         }
       }
-      // Black cards (Clubs=2, Spades=3) worth 0 points
     }
-    return score;
+
+    return true; // Can add to layout when no captures are possible
+  }
+
+  /// Execute a non-capturing play (add card to layout)
+  bool executeNonCapturingPlay(Card handCard, List<FoundationPile> foundations) {
+    if (_gameOver || _awaitingStockDraw) return false;
+
+    // Verify this is from current player's hand
+    if (handCard.pile is! TableauPile) return false;
+
+    final pile = handCard.pile as TableauPile;
+
+    // Remove card from player's hand
+    pile.removeCard(handCard, MoveMethod.tap);
+
+    // Add card to layout with proper positioning
+    final newIndex = _findNextAvailableLayoutPosition();
+    final centerPos = Vector2(
+      2.5 * KlondikeGame.cardSpaceWidth + KlondikeGame.cardGap,
+      1.5 * KlondikeGame.cardSpaceHeight + KlondikeGame.topGap,
+    );
+    final targetPos = _getLayoutCardPosition(newIndex, centerPos);
+    handCard.position = targetPos;
+    _layoutCards.add(handCard);
+
+    // Clear selections
+    clearSelections();
+
+    // Must draw from stock after non-capturing play
+    _awaitingStockDraw = true;
+
+    debugPrint('Player $_currentPlayerIndex played non-capturing card to layout');
+    return true;
+  }
+
+  /// Evaluate if the stock card can capture any layout cards and highlight valid options
+  void _evaluateStockCardCapture(Card stockCard) {
+    final validCaptures = <Card>[];
+
+    // Find all layout cards that can be captured by the stock card
+    for (final layoutCard in _layoutCards) {
+      if (layoutCard != stockCard && _canCapture(stockCard, layoutCard)) {
+        validCaptures.add(layoutCard);
+      }
+    }
+
+    if (validCaptures.isNotEmpty) {
+      // Set the stock card as selected hand card
+      _selectedHandCard = stockCard;
+      stockCard.setSelected(true);
+
+      // Use the capture highlighting system
+      _updateCaptureHighlights();
+
+      // Reset stock draw state so player can make the capture
+      _awaitingStockDraw = false;
+
+      debugPrint(
+        'Stock card ${stockCard.rank} of ${stockCard.suit} can capture ${validCaptures.length} layout cards',
+      );
+      debugPrint(
+        'Highlighted stock card and valid capture targets - player can now select and capture',
+      );
+    } else {
+      debugPrint(
+        'Stock card ${stockCard.rank} of ${stockCard.suit} cannot capture any layout cards',
+      );
+      // No valid captures, advance to next player
+      _advanceToNextPlayer();
+    }
   }
 
   // GameRules interface implementation
@@ -664,7 +799,7 @@ class EatRedsRules implements GameRules {
       return false;
     }
 
-    debugPrint('Attempting to select card: ${card.rank} of ${card.suit}');
+    debugPrint('Attempting to select card: ${card.rank.label} of ${card.suit.label}');
     debugPrint('Current player: $_currentPlayerIndex, awaiting stock draw: $_awaitingStockDraw');
 
     // Check if it's a hand card from current player
@@ -705,25 +840,77 @@ class EatRedsRules implements GameRules {
 
   @override
   bool canDrawFromStock(StockPile stock) {
+    debugPrint(
+      'canDrawFromStock called - gameOver: $_gameOver, stockRemaining: $_stockCardsRemaining, awaitingStockDraw: $_awaitingStockDraw',
+    );
+
     if (_gameOver || _stockCardsRemaining <= 0) return false;
 
     if (_awaitingStockDraw) {
-      // Reset counter and set up interception for the next waste pile card
-      _cardsInterceptedThisDraw = 0;
+      // Immediately set awaiting to false to prevent multiple rapid clicks
+      _awaitingStockDraw = false;
+
+      // Set up interception for the next waste pile card
       _interceptNextWasteDraw = true;
       debugPrint('EatReds: Setting up stock draw interception');
       return true;
     }
 
+    debugPrint('EatReds: Cannot draw from stock - not awaiting stock draw');
     return false;
   }
 
   @override
   bool checkWin({required List<FoundationPile> foundations}) => _gameOver;
 
+  @override
+  int getStockDrawCount() => 1; // EatReds draws only 1 card from stock
+
   /// Public method for UI to play a card (now handles selection)
   bool playCard(Card card, List<TableauPile> tableaus, StockPile stock) {
     // Use the new selection system instead of immediate play
     return handleCardTap(card);
+  }
+
+  /// Update capture highlights for layout cards when a hand card is selected
+  void _updateCaptureHighlights() {
+    // Clear existing capture highlights
+    _clearCaptureHighlights();
+
+    // If no hand card is selected, no highlights needed
+    if (_selectedHandCard == null) return;
+
+    // Highlight layout cards that can be captured by the selected hand card
+    for (final layoutCard in _layoutCards) {
+      if (_canCapture(_selectedHandCard!, layoutCard)) {
+        layoutCard.add(_CaptureHighlight());
+      }
+    }
+  }
+
+  /// Clear all capture highlights from layout cards
+  void _clearCaptureHighlights() {
+    for (final layoutCard in _layoutCards) {
+      final toRemove = layoutCard.children.whereType<_CaptureHighlight>().toList();
+      for (final highlight in toRemove) {
+        layoutCard.remove(highlight);
+      }
+    }
+  }
+}
+
+// Highlight overlay for layout cards that can be captured
+class _CaptureHighlight extends PositionComponent {
+  static final _paint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 35
+    ..color = const Color(0xAAFFD700); // Gold color
+
+  @override
+  void render(Canvas canvas) {
+    final parentComponent = parent as PositionComponent;
+    final rect = Rect.fromLTWH(0, 0, parentComponent.size.x, parentComponent.size.y);
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(KlondikeGame.cardRadius));
+    canvas.drawRRect(rrect, _paint);
   }
 }

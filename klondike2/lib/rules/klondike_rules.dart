@@ -126,5 +126,8 @@ class KlondikeRules implements GameRules {
   bool canDrawFromStock(StockPile stock) => true;
 
   @override
+  int getStockDrawCount() => 3; // Standard Klondike draws 3 cards
+
+  @override
   bool checkWin({required List<FoundationPile> foundations}) => foundations.every((f) => f.isFull);
 }

@@ -55,7 +55,8 @@ class StockPile extends PositionComponent with HasGameReference<KlondikeGame> im
       if (!game.rules.canDrawFromStock(this)) {
         return;
       }
-      for (var i = 0; i < game.klondikeDraw; i++) {
+      final drawCount = game.rules.getStockDrawCount();
+      for (var i = 0; i < drawCount; i++) {
         if (_cards.isNotEmpty) {
           final card = _cards.removeLast();
           card.doMoveAndFlip(

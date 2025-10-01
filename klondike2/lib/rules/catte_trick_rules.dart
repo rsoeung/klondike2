@@ -730,6 +730,8 @@ class CatTeTrickRules implements GameRules {
   @override
   bool canDrawFromStock(StockPile stock) => false;
   @override
+  int getStockDrawCount() => 0; // Cat Te doesn't use stock pile drawing
+  @override
   bool checkWin({required List<FoundationPile> foundations}) => _gameWinnerIndex != null;
 }
 

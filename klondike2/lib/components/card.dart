@@ -82,7 +82,7 @@ class Card extends PositionComponent
 
     // Add selection highlighting for EatReds
     if (_isSelected && world.game.rules is EatRedsRules) {
-      debugPrint('Rendering selection highlight for ${rank} of ${suit}');
+      // debugPrint('Rendering selection highlight for ${rank} of ${suit}');
       _renderSelectionHighlight(canvas);
     }
   }
@@ -127,7 +127,7 @@ class Card extends PositionComponent
     // Draw green background and border for selected cards
     canvas.drawRRect(cardRRect, selectionBackgroundPaint); // Background first
     canvas.drawRRect(cardRRect, selectionPaint); // Border on top
-    debugPrint('Selection highlight rendered with background and border');
+    // debugPrint('Selection highlight rendered with background and border');
   }
 
   // Front face styling: white background, red suits red, black suits black.
@@ -334,8 +334,8 @@ class Card extends PositionComponent
       _isDragging = true;
       priority = 100;
       if (pile is TableauPile) {
-        if (world.game.rules is CatTeRules) {
-          // In CatTe we always drag a single card (no building sequences).
+        if (world.game.rules is CatTeRules || world.game.rules is EatRedsRules) {
+          // In CatTe and EatReds we always drag a single card (no building sequences).
           attachedCards.clear();
         } else {
           final extraCards = (pile! as TableauPile).cardsOnTop(this);
@@ -614,7 +614,7 @@ class Card extends PositionComponent
   void setSelected(bool selected) {
     if (_isSelected != selected) {
       _isSelected = selected;
-      debugPrint('Card selection state changed to: $selected for ${rank} of ${suit}');
+      debugPrint('Card selection state changed to: $selected for ${rank.label} of ${suit.label}');
     }
   }
 

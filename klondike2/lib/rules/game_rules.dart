@@ -54,6 +54,9 @@ abstract class GameRules {
   bool canDropOnFoundation({required Card moving, required FoundationPile foundation});
   bool canDrawFromStock(StockPile stock);
 
+  // Number of cards to draw from stock (can be overridden by subclasses)
+  int getStockDrawCount() => 3; // Default Klondike behavior
+
   // Win condition
   bool checkWin({required List<FoundationPile> foundations});
 }

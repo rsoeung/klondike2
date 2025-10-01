@@ -15,7 +15,7 @@ class EatRedsPlayButton extends RectangleComponent
   EatRedsPlayButton({required Vector2 position})
     : super(
         position: position,
-        size: Vector2(KlondikeGame.cardWidth, 0.6 * KlondikeGame.topGap),
+        size: Vector2(KlondikeGame.cardWidth * 1.5, 0.6 * KlondikeGame.topGap), // Increased width
         paint: Paint()..color = const Color(0xFF4CAF50), // Green color
       );
 
@@ -31,6 +31,13 @@ class EatRedsPlayButton extends RectangleComponent
           fontSize: 0.5 * size.y, // Same dynamic sizing as FlatButton
           fontWeight: FontWeight.bold,
           color: const Color(0xffdbaf58), // Same gold color as other buttons
+          shadows: [
+            Shadow(
+              color: const Color(0xFF000000), // Black shadow for text border
+              offset: const Offset(1, 1),
+              blurRadius: 2,
+            ),
+          ],
         ),
       ),
       anchor: Anchor.center,

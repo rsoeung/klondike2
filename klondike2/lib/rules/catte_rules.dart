@@ -138,6 +138,9 @@ class CatTeRules implements GameRules {
   bool canDrawFromStock(StockPile stock) => false; // Disabled.
 
   @override
+  int getStockDrawCount() => 0; // Cat Te doesn't use stock pile drawing
+
+  @override
   bool checkWin({required List<FoundationPile> foundations}) {
     // Placeholder: win when each foundation has at least one card.
     // Placeholder: Win when every foundation has at least one card.

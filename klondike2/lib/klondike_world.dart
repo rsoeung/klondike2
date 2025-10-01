@@ -6,6 +6,7 @@ import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 
 import 'components/card.dart';
+import 'components/eat_reds_add_to_layout_button.dart';
 import 'components/eat_reds_play_button.dart';
 import 'components/eat_reds_score_display.dart';
 import 'components/flat_button.dart';
@@ -21,6 +22,7 @@ import 'rules/catte_trick_rules.dart';
 import 'rules/eat_reds_rules.dart';
 // highlight / overlay helpers
 import 'overlays/catte_trick_overlay.dart';
+import 'overlays/eat_reds_status_overlay.dart';
 
 class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
   KlondikeWorld({GameRules? rules}) : rules = rules ?? KlondikeRules();
@@ -43,6 +45,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
 
   // EatReds UI components
   EatRedsPlayButton? _eatRedsPlayButton;
+  EatRedsAddToLayoutButton? _eatRedsAddToLayoutButton;
   final List<EatRedsScoreDisplay> _eatRedsScoreDisplays = [];
 
   @override
@@ -158,6 +161,11 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     // Add overlay components for CatTe trick rules (simple text labels) after deal.
     if (rules is CatTeTrickRules) {
       add(CatTeTrickStatusOverlay(rules as CatTeTrickRules));
+    }
+
+    // Add overlay components for Eat Reds rules (player scores and status)
+    if (rules is EatRedsRules) {
+      add(EatRedsStatusOverlay(rules as EatRedsRules));
     }
   }
 
@@ -318,6 +326,10 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       remove(_eatRedsPlayButton!);
       _eatRedsPlayButton = null;
     }
+    if (_eatRedsAddToLayoutButton != null) {
+      remove(_eatRedsAddToLayoutButton!);
+      _eatRedsAddToLayoutButton = null;
+    }
     for (final scoreDisplay in _eatRedsScoreDisplays) {
       remove(scoreDisplay);
     }
@@ -335,6 +347,16 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     );
     _eatRedsPlayButton = EatRedsPlayButton(position: playButtonPos);
     add(_eatRedsPlayButton!);
+
+    // Add Add to Layout button below the Play button
+    final buttonHeight = 0.6 * KlondikeGame.topGap;
+    final buttonGap = 0.1 * KlondikeGame.topGap; // 10% of topGap for proportional spacing
+    final addToLayoutButtonPos = Vector2(
+      playButtonPos.x,
+      playButtonPos.y + buttonHeight * 2 + buttonGap, // Button height + gap below Play button
+    );
+    _eatRedsAddToLayoutButton = EatRedsAddToLayoutButton(position: addToLayoutButtonPos);
+    add(_eatRedsAddToLayoutButton!);
 
     // Add score displays above each foundation pile
     for (var i = 0; i < rules.playerCount; i++) {
@@ -521,6 +543,10 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     if (_eatRedsPlayButton != null) {
       remove(_eatRedsPlayButton!);
       _eatRedsPlayButton = null;
+    }
+    if (_eatRedsAddToLayoutButton != null) {
+      remove(_eatRedsAddToLayoutButton!);
+      _eatRedsAddToLayoutButton = null;
     }
     for (final scoreDisplay in _eatRedsScoreDisplays) {
       remove(scoreDisplay);
