@@ -58,17 +58,18 @@ class FoundationPile extends PositionComponent with HasGameReference<KlondikeGam
     card.position = position;
     card.priority = _cards.length;
     card.pile = this;
-    
+
     // Clear any selection state when card moves to foundation
     card.setSelected(false);
-    
+
     // Clear any capture highlight components (for EatReds)
-    final highlightsToRemove = card.children.where((child) => 
-        child.runtimeType.toString().contains('CaptureHighlight')).toList();
+    final highlightsToRemove = card.children
+        .where((child) => child.runtimeType.toString().contains('CaptureHighlight'))
+        .toList();
     for (final highlight in highlightsToRemove) {
       card.remove(highlight);
     }
-    
+
     _cards.add(card);
     if (isFull) {
       checkWin(); // Get KlondikeWorld to check all FoundationPiles.

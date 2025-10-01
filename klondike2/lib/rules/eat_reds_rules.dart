@@ -219,6 +219,9 @@ class EatRedsRules implements GameRules {
     _layoutCards.remove(layoutCard);
     _clearSelectionIfRemoved(layoutCard);
 
+    // Refresh layout positions to maintain compact grid
+    _refreshLayoutPositions();
+
     // Add both cards to current player's captured pile
     _capturedCards[_currentPlayerIndex].add(handCard);
     _capturedCards[_currentPlayerIndex].add(layoutCard);
@@ -306,71 +309,52 @@ class EatRedsRules implements GameRules {
     return score;
   }
 
-  /// Find the next available position for a layout card, prioritizing the 2x2 grid
+  /// Find the next available position for a layout card, using a compact grid pattern
   int _findNextAvailableLayoutPosition() {
-    // Track which positions in the initial 2x2 grid are occupied
-    final occupiedGridPositions = <int>{};
-
-    // For each card in the layout, determine its grid position
-    for (int cardIndex = 0; cardIndex < _layoutCards.length; cardIndex++) {
-      final layoutCard = _layoutCards[cardIndex];
-
-      // Check if this card was placed in one of the initial 4 grid positions
-      // We can determine this by checking if any of the first 4 positions match this card's position
-      final centerPos = Vector2(
-        2.5 * KlondikeGame.cardSpaceWidth + KlondikeGame.cardGap,
-        1.5 * KlondikeGame.cardSpaceHeight + KlondikeGame.topGap,
-      );
-
-      for (int gridPos = 0; gridPos < 4; gridPos++) {
-        final testPos = _getLayoutCardPosition(gridPos, centerPos);
-        final distance = (layoutCard.position - testPos).length;
-
-        if (distance < 5.0) {
-          // Small tolerance for position matching
-          occupiedGridPositions.add(gridPos);
-          break;
-        }
-      }
-    }
-
-    // Find the first available position in the 2x2 grid
-    for (int i = 0; i < 4; i++) {
-      if (!occupiedGridPositions.contains(i)) {
-        return i;
-      }
-    }
-
-    // If all grid positions are occupied, expand beyond the grid
+    // Simply return the next index - we'll arrange cards in a compact grid
     return _layoutCards.length;
   }
 
-  /// Calculate position for a layout card based on its index in the layout
+  /// Calculate position for a layout card based on its index in a compact grid layout
   Vector2 _getLayoutCardPosition(int index, Vector2 centerPos) {
-    if (index < 4) {
-      // Initial 4 cards in 2x2 grid
-      final row = index ~/ 2;
-      final col = index % 2;
-      final offsetX = (col - 0.5) * (KlondikeGame.cardWidth + 20);
-      final offsetY = (row - 0.5) * (KlondikeGame.cardHeight + 15);
-      return centerPos + Vector2(offsetX, offsetY);
-    } else {
-      // Additional cards expand to the right in rows
-      final extraIndex = index - 4;
-      final cardsPerRow = 4; // Continue with 4 cards per row
-      final row = extraIndex ~/ cardsPerRow;
-      final col = extraIndex % cardsPerRow;
+    // Define grid dimensions
+    const int cardsPerRow = 4; // 4 cards per row for a nice grid
+    const double cardSpacingX = KlondikeGame.cardWidth + 20;
+    const double cardSpacingY = KlondikeGame.cardHeight + 15;
 
-      // Start positioning to the right of the initial 2x2 grid
-      final rightEdgeX =
-          centerPos.x + (KlondikeGame.cardWidth + 20) * 0.5; // Right edge of initial grid
-      final spacing = KlondikeGame.cardWidth + 10; // Horizontal spacing between cards
-      final rowSpacing = KlondikeGame.cardHeight + 15; // Vertical spacing between rows
+    // Calculate row and column for this index
+    final row = index ~/ cardsPerRow;
+    final col = index % cardsPerRow;
 
-      final offsetX = rightEdgeX + (col + 1) * spacing; // Start one card width to the right
-      final offsetY = centerPos.y + (row - 0.5) * rowSpacing; // Adjusted to move down half a card
+    // Calculate the grid starting position (top-left of the grid)
+    // Center the grid around the centerPos
+    final gridWidth = cardsPerRow * cardSpacingX;
+    final startX = centerPos.x - (gridWidth / 2) + (cardSpacingX / 2);
+    final startY = centerPos.y - (cardSpacingY / 2); // Start slightly above center
 
-      return Vector2(offsetX, offsetY);
+    // Calculate final position
+    final x = startX + (col * cardSpacingX);
+    final y = startY + (row * cardSpacingY);
+
+    return Vector2(x, y);
+  }
+
+  /// Refresh the positions of all layout cards to maintain compact grid
+  void _refreshLayoutPositions() {
+    final centerPos = Vector2(
+      3.5 * KlondikeGame.cardSpaceWidth + KlondikeGame.cardGap,
+      1.5 * KlondikeGame.cardSpaceHeight + KlondikeGame.topGap,
+    );
+
+    for (int i = 0; i < _layoutCards.length; i++) {
+      final card = _layoutCards[i];
+      final targetPos = _getLayoutCardPosition(i, centerPos);
+
+      // Animate card to new position if it's not already there
+      final currentDistance = (card.position - targetPos).length;
+      if (currentDistance > 5.0) {
+        card.doMove(targetPos, speed: 15);
+      }
     }
   }
 
@@ -397,7 +381,7 @@ class EatRedsRules implements GameRules {
     stock.position = Vector2(cardGap, topGap);
 
     // Waste pile serves as the center layout area - positioned higher and more centered
-    waste.position = Vector2(2.5 * cardSpaceWidth + cardGap, 1.5 * cardSpaceHeight + topGap);
+    waste.position = Vector2(3.5 * cardSpaceWidth + cardGap, 1.5 * cardSpaceHeight + topGap);
 
     // Create tableau piles for each player's hand
     for (var i = 0; i < playerCount; i++) {
@@ -612,6 +596,8 @@ class EatRedsRules implements GameRules {
         _capturedCards[_currentPlayerIndex].add(captured);
         _capturedCards[_currentPlayerIndex].add(playedCard); // Add played card too
       }
+      // Refresh layout positions to maintain compact grid
+      _refreshLayoutPositions();
       debugPrint('Player $_currentPlayerIndex captured ${captures.length + 1} cards.');
       return true;
     } else {
@@ -758,7 +744,7 @@ class EatRedsRules implements GameRules {
     // Add card to layout with proper positioning
     final newIndex = _findNextAvailableLayoutPosition();
     final centerPos = Vector2(
-      2.5 * KlondikeGame.cardSpaceWidth + KlondikeGame.cardGap,
+      3.5 * KlondikeGame.cardSpaceWidth + KlondikeGame.cardGap,
       1.5 * KlondikeGame.cardSpaceHeight + KlondikeGame.topGap,
     );
     final targetPos = _getLayoutCardPosition(newIndex, centerPos);
@@ -842,6 +828,9 @@ class EatRedsRules implements GameRules {
       // Clear any selections for removed cards
       _clearSelectionIfRemoved(stockCard);
       _clearSelectionIfRemoved(layoutCard);
+
+      // Refresh layout positions to maintain compact grid
+      _refreshLayoutPositions();
 
       // Add both cards to current player's captured pile
       _capturedCards[_currentPlayerIndex].add(stockCard);
