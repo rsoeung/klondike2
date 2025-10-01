@@ -318,7 +318,7 @@ class EatRedsRules implements GameRules {
   /// Calculate position for a layout card based on its index in a compact grid layout
   Vector2 _getLayoutCardPosition(int index, Vector2 centerPos) {
     // Define grid dimensions
-    const int cardsPerRow = 4; // 4 cards per row for a nice grid
+    const int cardsPerRow = 5; // 5 cards per row for a nice grid
     const double cardSpacingX = KlondikeGame.cardWidth + 20;
     const double cardSpacingY = KlondikeGame.cardHeight + 15;
 
