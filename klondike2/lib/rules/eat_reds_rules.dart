@@ -141,15 +141,29 @@ class EatRedsRules implements GameRules {
 
   /// Select a card from the center layout
   void selectLayoutCard(Card card) {
+    debugPrint('selectLayoutCard called for: ${card.rank.label} of ${card.suit.label}');
+    debugPrint('Layout cards count: ${_layoutCards.length}');
+    debugPrint('Card in layout cards: ${_layoutCards.contains(card)}');
+    debugPrint('Game over: $_gameOver, awaiting stock draw: $_awaitingStockDraw');
+    debugPrint('Current player: $_currentPlayerIndex');
+
     if (_layoutCards.contains(card)) {
       // Clear previous layout card selection
       if (_selectedLayoutCard != null) {
         _selectedLayoutCard!.setSelected(false);
+        debugPrint('Cleared previous layout card selection');
       }
 
       _selectedLayoutCard = card;
       card.setSelected(true);
       debugPrint('Selected layout card: ${card.rank.label} of ${card.suit.label}');
+    } else {
+      debugPrint('ERROR: Card not found in layout cards list!');
+      debugPrint('Available layout cards:');
+      for (int i = 0; i < _layoutCards.length; i++) {
+        final layoutCard = _layoutCards[i];
+        debugPrint('  [$i]: ${layoutCard.rank.label} of ${layoutCard.suit.label}');
+      }
     }
   }
 
@@ -170,6 +184,18 @@ class EatRedsRules implements GameRules {
     debugPrint('Card selections cleared');
   }
 
+  /// Clear selection if the card was removed from play
+  void _clearSelectionIfRemoved(Card card) {
+    if (_selectedHandCard == card) {
+      _selectedHandCard = null;
+      debugPrint('Cleared selected hand card that was removed from play');
+    }
+    if (_selectedLayoutCard == card) {
+      _selectedLayoutCard = null;
+      debugPrint('Cleared selected layout card that was removed from play');
+    }
+  }
+
   /// Execute the play action with selected cards
   bool executePlay(List<FoundationPile> foundations) {
     if (!canPlay) return false;
@@ -188,8 +214,10 @@ class EatRedsRules implements GameRules {
     // Remove both cards from layout if it's a stock card capture
     if (isStockCardCapture) {
       _layoutCards.remove(handCard);
+      _clearSelectionIfRemoved(handCard);
     }
     _layoutCards.remove(layoutCard);
+    _clearSelectionIfRemoved(layoutCard);
 
     // Add both cards to current player's captured pile
     _capturedCards[_currentPlayerIndex].add(handCard);
@@ -268,9 +296,9 @@ class EatRedsRules implements GameRules {
           cardPoints = card.rank.value;
         }
         score += cardPoints;
-        debugPrint('  ${card.rank} of ${card.suit}: +$cardPoints points');
+        // debugPrint('  ${card.rank.label} of ${card.suit.label}: +$cardPoints points');
       } else {
-        debugPrint('  ${card.rank} of ${card.suit}: +0 points (black)');
+        // debugPrint('  ${card.rank.label} of ${card.suit.label}: +0 points (black)');
       }
       // Black cards = 0 points
     }
@@ -631,11 +659,23 @@ class EatRedsRules implements GameRules {
       targetPos,
       speed: 10,
       onComplete: () {
+        // IMPORTANT: Remove the card from its pile to prevent pile association issues
+        // Note: Don't try to remove from StockPile as it doesn't allow removal
+        if (card.pile != null && card.pile is! StockPile) {
+          card.pile!.removeCard(card, MoveMethod.tap);
+        }
+        // Clear pile association for stock cards manually
+        if (card.pile is StockPile) {
+          card.pile = null;
+        }
+
         // Add to layout cards for gameplay
         _layoutCards.add(card);
         debugPrint(
           'Drew card from stock to layout: ${card.rank} of ${card.suit} at position $targetIndex',
         );
+        debugPrint('Layout cards now contains ${_layoutCards.length} cards');
+        debugPrint('Card pile after removal: ${card.pile?.runtimeType}');
 
         // Clear any existing selections to start fresh
         clearSelections();
@@ -723,6 +763,8 @@ class EatRedsRules implements GameRules {
     );
     final targetPos = _getLayoutCardPosition(newIndex, centerPos);
     handCard.position = targetPos;
+
+    // Add to layout cards - card is now a layout card, not a hand card
     _layoutCards.add(handCard);
 
     // Clear selections
@@ -732,6 +774,7 @@ class EatRedsRules implements GameRules {
     _awaitingStockDraw = true;
 
     debugPrint('Player $_currentPlayerIndex played non-capturing card to layout');
+    debugPrint('Card pile after adding to layout: ${handCard.pile?.runtimeType}');
     return true;
   }
 
@@ -747,22 +790,34 @@ class EatRedsRules implements GameRules {
     }
 
     if (validCaptures.isNotEmpty) {
-      // Set the stock card as selected hand card
-      _selectedHandCard = stockCard;
-      stockCard.setSelected(true);
+      if (validCaptures.length == 1) {
+        // Exactly 1 capture - auto-capture after a brief delay for visual feedback
+        final layoutCard = validCaptures.first;
 
-      // Use the capture highlighting system
-      _updateCaptureHighlights();
+        debugPrint(
+          'Stock card ${stockCard.rank} of ${stockCard.suit} auto-capturing ${layoutCard.rank} of ${layoutCard.suit}',
+        );
 
-      // Reset stock draw state so player can make the capture
-      _awaitingStockDraw = false;
+        // Animate both cards being captured
+        _animateAutoCapture(stockCard, layoutCard);
+      } else {
+        // Multiple captures - let player choose
+        _selectedHandCard = stockCard;
+        stockCard.setSelected(true);
 
-      debugPrint(
-        'Stock card ${stockCard.rank} of ${stockCard.suit} can capture ${validCaptures.length} layout cards',
-      );
-      debugPrint(
-        'Highlighted stock card and valid capture targets - player can now select and capture',
-      );
+        // Use the capture highlighting system
+        _updateCaptureHighlights();
+
+        // Reset stock draw state so player can make the capture
+        _awaitingStockDraw = false;
+
+        debugPrint(
+          'Stock card ${stockCard.rank} of ${stockCard.suit} can capture ${validCaptures.length} layout cards - player must choose',
+        );
+        debugPrint(
+          'Highlighted stock card and valid capture targets - player can now select and capture',
+        );
+      }
     } else {
       debugPrint(
         'Stock card ${stockCard.rank} of ${stockCard.suit} cannot capture any layout cards',
@@ -770,6 +825,53 @@ class EatRedsRules implements GameRules {
       // No valid captures, advance to next player
       _advanceToNextPlayer();
     }
+  }
+
+  /// Animate automatic capture of stock card and layout card
+  void _animateAutoCapture(Card stockCard, Card layoutCard) {
+    // Add a brief highlight to show what's being captured
+    stockCard.add(_CaptureHighlight());
+    layoutCard.add(_CaptureHighlight());
+
+    // Delay the capture to show the animation
+    Future.delayed(const Duration(milliseconds: 800), () {
+      // Remove cards from layout
+      _layoutCards.remove(stockCard);
+      _layoutCards.remove(layoutCard);
+
+      // Clear any selections for removed cards
+      _clearSelectionIfRemoved(stockCard);
+      _clearSelectionIfRemoved(layoutCard);
+
+      // Add both cards to current player's captured pile
+      _capturedCards[_currentPlayerIndex].add(stockCard);
+      _capturedCards[_currentPlayerIndex].add(layoutCard);
+
+      debugPrint('Auto-captured cards added to player $_currentPlayerIndex captured pile:');
+      debugPrint(
+        '  Stock card: ${stockCard.rank} of ${stockCard.suit} (${stockCard.suit.isRed ? "RED" : "BLACK"})',
+      );
+      debugPrint(
+        '  Layout card: ${layoutCard.rank} of ${layoutCard.suit} (${layoutCard.suit.isRed ? "RED" : "BLACK"})',
+      );
+
+      // Get foundation piles from the world through the card's world reference
+      final world = stockCard.world;
+      final foundations = world.foundations;
+
+      // Move cards to foundation pile (visually)
+      _moveCardsToFoundation(stockCard, layoutCard, _currentPlayerIndex, foundations);
+
+      // Clear any selections and highlights
+      clearSelections();
+
+      // Advance to next player
+      _advanceToNextPlayer();
+
+      debugPrint(
+        'Auto-capture complete. Player $_currentPlayerIndex score: ${getPlayerScore(_currentPlayerIndex)}',
+      );
+    });
   }
 
   // GameRules interface implementation
@@ -799,10 +901,22 @@ class EatRedsRules implements GameRules {
       return false;
     }
 
+    debugPrint('=== CARD TAP DEBUG ===');
     debugPrint('Attempting to select card: ${card.rank.label} of ${card.suit.label}');
+    debugPrint('Card pile type: ${card.pile?.runtimeType}');
+    debugPrint('Card position: ${card.position}');
     debugPrint('Current player: $_currentPlayerIndex, awaiting stock draw: $_awaitingStockDraw');
+    debugPrint('Layout cards count: ${_layoutCards.length}');
+    debugPrint('Card in layout: ${_layoutCards.contains(card)}');
 
-    // Check if it's a hand card from current player
+    // PRIORITY 1: Check if it's a layout card first (regardless of pile association)
+    if (_layoutCards.contains(card)) {
+      debugPrint('Confirmed: Card is in layout, calling selectLayoutCard');
+      selectLayoutCard(card);
+      return true;
+    }
+
+    // PRIORITY 2: Check if it's a hand card from current player
     if (card.pile is TableauPile) {
       final pile = card.pile as TableauPile;
       final game = pile.game;
@@ -821,14 +935,20 @@ class EatRedsRules implements GameRules {
       }
     }
 
-    // Check if it's a layout card
-    if (_layoutCards.contains(card)) {
-      debugPrint('Selecting layout card');
-      selectLayoutCard(card);
-      return true;
+    // DEBUG: Show what layout cards we have if selection failed
+    debugPrint('Card selection failed - not a valid card to select');
+    debugPrint('Available layout cards:');
+    for (int i = 0; i < _layoutCards.length; i++) {
+      final layoutCard = _layoutCards[i];
+      debugPrint(
+        '  Layout[$i]: ${layoutCard.rank.label} of ${layoutCard.suit.label} at ${layoutCard.position}',
+      );
+      debugPrint('    Pile: ${layoutCard.pile?.runtimeType}');
+      debugPrint('    Same object: ${identical(card, layoutCard)}');
     }
 
     debugPrint('Card selection failed: not a valid card to select');
+    debugPrint('=== END CARD TAP DEBUG ===');
     return false;
   }
 
@@ -902,9 +1022,8 @@ class EatRedsRules implements GameRules {
 // Highlight overlay for layout cards that can be captured
 class _CaptureHighlight extends PositionComponent {
   static final _paint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 35
-    ..color = const Color(0xAAFFD700); // Gold color
+    ..style = PaintingStyle.fill
+    ..color = const Color(0x80FFFF00); // Semi-transparent yellow fill
 
   @override
   void render(Canvas canvas) {

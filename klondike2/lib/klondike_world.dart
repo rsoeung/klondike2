@@ -39,6 +39,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
   final List<TableauPile> tableauPiles = [];
   final List<Card> cards = [];
   late Vector2 playAreaSize;
+  bool _isInitialized = false;
 
   // Track last selected card to avoid unnecessary button syncs
   Card? _lastSelectedCard;
@@ -111,6 +112,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
 
     playAreaSize = rules.playAreaSize;
     debugPrint('Play area size set: $playAreaSize');
+    _isInitialized = true;
     final gameMidX = playAreaSize.x / 2;
 
     // Add a toggle to switch rules at runtime (left of the first button).
@@ -144,16 +146,7 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
 
     // Center the whole play area and add responsive margins.
     final camera = game.camera;
-    // Responsive margins as a percentage of play area (min 1 card gap vertically and horizontally)
-    final marginX = max(cardGap, playAreaSize.x * 0.05);
-    final marginY = max(topGap, playAreaSize.y * 0.05);
-    final visibleWithMargins = Vector2(playAreaSize.x + marginX * 2, playAreaSize.y + marginY * 2);
-    camera.viewfinder.visibleGameSize = visibleWithMargins;
-    camera.viewfinder.position = playAreaSize / 2; // center of world
-    camera.viewfinder.anchor = Anchor.center;
-    debugPrint(
-      'Camera configured (centered). margins=($marginX,$marginY), visible=$visibleWithMargins, position=${camera.viewfinder.position}',
-    );
+    _configureCameraView(camera);
 
     // Dealing via rules
     rules.deal(deck: cards, tableaus: tableauPiles, stock: stock, waste: waste, seed: game.seed);
@@ -167,6 +160,34 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     if (rules is EatRedsRules) {
       add(EatRedsStatusOverlay(rules as EatRedsRules));
     }
+  }
+
+  /// Configure camera view with responsive sizing
+  void _configureCameraView(CameraComponent camera) {
+    // Responsive margins as a percentage of play area (min 1 card gap vertically and horizontally)
+    final marginX = max(cardGap, playAreaSize.x * 0.05);
+    final marginY = max(topGap, playAreaSize.y * 0.05);
+    final visibleWithMargins = Vector2(playAreaSize.x + marginX * 2, playAreaSize.y + marginY * 2);
+
+    camera.viewfinder.visibleGameSize = visibleWithMargins;
+    camera.viewfinder.position = playAreaSize / 2; // center of world
+    camera.viewfinder.anchor = Anchor.center;
+
+    debugPrint(
+      'Camera configured (centered). margins=($marginX,$marginY), visible=$visibleWithMargins, position=${camera.viewfinder.position}',
+    );
+  }
+
+  /// Update camera configuration when window is resized
+  void updateCameraForResize(Vector2 screenSize) {
+    if (!_isInitialized) {
+      debugPrint('Skipping camera resize - world not fully initialized yet');
+      return;
+    }
+
+    debugPrint('Updating camera for screen resize: $screenSize');
+    _configureCameraView(game.camera);
+    debugPrint('Camera updated for resize');
   }
 
   FlatButton? _playBtn;

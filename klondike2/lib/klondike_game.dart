@@ -82,6 +82,14 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
     seed = Random().nextInt(maxInt);
     debugPrint('Generated new random seed: $seed');
   }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+
+    // Update camera viewport when window is resized
+    world.updateCameraForResize(size);
+  }
 }
 
 enum RulesVariant { klondike, catte, catteTrick, eatReds }
