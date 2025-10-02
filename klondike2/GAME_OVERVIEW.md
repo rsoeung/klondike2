@@ -126,20 +126,24 @@ If you want a deeper explanation of any specific file, class, or function, just 
 You can swap out Klondike for other rule sets. The codebase exposes a `GameRules` interface and example implementations:
 
 - `KlondikeRules` (standard solitaire)
-- `CatTeRules` (work-in-progress custom rule set with 6 tableau + 6 foundations)
+- `CatTeTrickRules` (6-card trick-taking game with regional variants)
+- `EatRedsRules` (Chinese Ten card pairing game)
+- `EatPairsRules` (Siku pair-matching game)
 
 ### Where to look
 
 - Interface: `lib/rules/game_rules.dart`
 - Klondike implementation: `lib/rules/klondike_rules.dart`
-- CatTe implementation: `lib/rules/catte_rules.dart`
+- CatTe Trick implementation: `lib/rules/catte_trick_rules.dart`
+- Eat Reds implementation: `lib/rules/eat_reds_rules.dart`
+- Eat Pairs implementation: `lib/rules/eat_pairs_rules.dart`
 - Wiring: `lib/klondike_game.dart` (buildRules/RulesVariant) and `lib/klondike_world.dart` (uses rules for layout/deal/win)
 
 ### Quick start
 
-1) Start from CatTe or Klondike
+1) Start from an existing implementation
 
-- Copy `lib/rules/catte_rules.dart` (simpler) or `lib/rules/klondike_rules.dart` (fuller) to a new file.
+- Copy `lib/rules/klondike_rules.dart` or another implementation to a new file.
 - Rename the class (e.g., `class MyRules implements GameRules`).
 
 2) Implement your rules

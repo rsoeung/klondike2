@@ -468,8 +468,6 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       switch (v) {
         case RulesVariant.klondike:
           return 'Klondike';
-        case RulesVariant.catte:
-          return 'CatTe Simple';
         case RulesVariant.catteTrick:
           return 'CatTe Trick';
         case RulesVariant.eatReds:

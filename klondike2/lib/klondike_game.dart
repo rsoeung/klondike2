@@ -9,7 +9,6 @@ import 'package:flame/game.dart';
 import 'klondike_world.dart';
 import 'rules/game_rules.dart';
 import 'rules/klondike_rules.dart';
-import 'rules/catte_rules.dart';
 import 'rules/catte_trick_rules.dart';
 import 'rules/eat_reds_rules.dart';
 import 'rules/eat_pairs_rules.dart';
@@ -47,8 +46,6 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
 
   GameRules buildRules() {
     switch (rulesVariant) {
-      case RulesVariant.catte:
-        return CatTeRules();
       case RulesVariant.catteTrick:
         return CatTeTrickRules(region: catTeRegion);
       case RulesVariant.eatReds:
@@ -97,7 +94,7 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   }
 }
 
-enum RulesVariant { klondike, catte, catteTrick, eatReds, eatPairs }
+enum RulesVariant { klondike, catteTrick, eatReds, eatPairs }
 
 Sprite klondikeSprite(double x, double y, double width, double height) {
   debugPrint('klondikeSprite called with x: $x, y: $y, width: $width, height: $height');
