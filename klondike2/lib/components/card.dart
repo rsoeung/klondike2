@@ -16,7 +16,6 @@ import 'foundation_pile.dart';
 import 'stock_pile.dart';
 import 'tableau_pile.dart';
 import '../rules/klondike_rules.dart';
-import '../rules/catte_rules.dart';
 import '../rules/catte_trick_rules.dart';
 import '../rules/eat_reds_rules.dart';
 import '../rules/eat_pairs_rules.dart';
@@ -335,7 +334,7 @@ class Card extends PositionComponent
       _isDragging = true;
       priority = 100;
       if (pile is TableauPile) {
-        if (world.game.rules is CatTeRules || world.game.rules is EatRedsRules) {
+        if (world.game.rules is EatRedsRules) {
           // In CatTe and EatReds we always drag a single card (no building sequences).
           attachedCards.clear();
         } else {

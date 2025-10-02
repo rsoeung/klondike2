@@ -6,7 +6,6 @@ import 'package:flame/components.dart';
 import '../klondike_game.dart';
 import '../pile.dart';
 import 'card.dart';
-import '../rules/catte_rules.dart';
 import '../rules/catte_trick_rules.dart';
 import '../rules/eat_reds_rules.dart';
 import '../rules/eat_pairs_rules.dart';
@@ -75,8 +74,7 @@ class TableauPile extends PositionComponent with HasGameReference<KlondikeGame> 
     final index = _cards.indexOf(card);
 
     // CatTe variants, EatReds, and EatPairs: allow plucking a single interior card without taking the stack above it.
-    if (game.rules is CatTeRules ||
-        game.rules is CatTeTrickRules ||
+    if (game.rules is CatTeTrickRules ||
         game.rules is EatRedsRules ||
         game.rules is EatPairsRules) {
       _cards.removeAt(index);
