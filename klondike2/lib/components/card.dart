@@ -19,6 +19,7 @@ import '../rules/klondike_rules.dart';
 import '../rules/catte_rules.dart';
 import '../rules/catte_trick_rules.dart';
 import '../rules/eat_reds_rules.dart';
+import '../rules/eat_pairs_rules.dart';
 
 class Card extends PositionComponent
     with DragCallbacks, TapCallbacks, HasWorldReference<KlondikeWorld> {
@@ -80,8 +81,8 @@ class Card extends PositionComponent
       _renderBack(canvas);
     }
 
-    // Add selection highlighting for EatReds
-    if (_isSelected && world.game.rules is EatRedsRules) {
+    // Add selection highlighting for EatReds and EatPairs
+    if (_isSelected && (world.game.rules is EatRedsRules || world.game.rules is EatPairsRules)) {
       // debugPrint('Rendering selection highlight for ${rank} of ${suit}');
       _renderSelectionHighlight(canvas);
     }
@@ -470,6 +471,14 @@ class Card extends PositionComponent
       r.handleCardTap(this);
       return; // Always return here to prevent card movement
     }
+    if (r is EatPairsRules) {
+      // Tap selects cards for matching/playing
+      // Only allow selection from current player's hand
+      if (pile is TableauPile) {
+        r.selectHandCard(this, world.tableauPiles);
+      }
+      return; // Always return here to prevent card movement
+    }
     handleTapUp();
   }
 
@@ -610,7 +619,7 @@ class Card extends PositionComponent
     );
   }
 
-  /// Set the selection state for EatReds card pairing
+  /// Set the selection state for EatReds and EatPairs card pairing
   void setSelected(bool selected) {
     if (_isSelected != selected) {
       _isSelected = selected;

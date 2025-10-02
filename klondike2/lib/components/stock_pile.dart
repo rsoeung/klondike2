@@ -4,8 +4,11 @@ import 'package:flame/components.dart';
 
 import '../klondike_game.dart';
 import '../pile.dart';
+import '../rules/eat_pairs_rules.dart';
 import 'card.dart';
 import 'waste_pile.dart';
+import 'foundation_pile.dart';
+import 'tableau_pile.dart';
 
 class StockPile extends PositionComponent with HasGameReference<KlondikeGame> implements Pile {
   StockPile({super.position}) : super(size: KlondikeGame.cardSize);
@@ -43,6 +46,66 @@ class StockPile extends PositionComponent with HasGameReference<KlondikeGame> im
 
   void handleTapUp(Card card) {
     final wastePile = parent!.firstChild<WastePile>()!;
+
+    // Special handling for Eat Pairs game
+    if (game.rules is EatPairsRules) {
+      if (_cards.isEmpty) {
+        return; // No recycling in Eat Pairs
+      }
+
+      // Delegate draw policy to rules
+      if (!game.rules.canDrawFromStock(this)) {
+        return;
+      }
+
+      final eatPairsRules = game.rules as EatPairsRules;
+
+      // Draw and distribute the card
+      if (eatPairsRules.drawAndDistributeFromStock(
+        this,
+        parent!.children.whereType<TableauPile>().toList(),
+        parent!.children.whereType<FoundationPile>().toList(),
+        wastePile,
+      )) {
+        // Draw the card and move it to waste pile
+        if (_cards.isNotEmpty) {
+          final drawnCard = _cards.removeLast();
+
+          // Flip the card face-up immediately
+          if (drawnCard.isFaceDown) {
+            drawnCard.flip();
+          }
+
+          // Animate to waste pile (like Eat Reds)
+          drawnCard.doMove(
+            wastePile.position,
+            speed: 10,
+            onComplete: () {
+              // Clear pile association from stock
+              if (drawnCard.pile is StockPile) {
+                drawnCard.pile = null;
+              }
+
+              wastePile.acquireCard(drawnCard);
+
+              // Add a small delay before processing to make animations visible
+              Future.delayed(const Duration(milliseconds: 100), () {
+                // Process the drawn card for matching
+                eatPairsRules.processDrawnCard(
+                  drawnCard,
+                  parent!.children.whereType<TableauPile>().toList(),
+                  parent!.children.whereType<FoundationPile>().toList(),
+                  wastePile,
+                );
+              });
+            },
+          );
+        }
+      }
+      return;
+    }
+
+    // Default behavior for other games
     if (_cards.isEmpty) {
       assert(card.isBaseCard, 'Stock Pile is empty, but no Base Card present');
       card.position = position; // Force Base Card (back) into correct position.

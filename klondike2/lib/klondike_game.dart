@@ -12,6 +12,7 @@ import 'rules/klondike_rules.dart';
 import 'rules/catte_rules.dart';
 import 'rules/catte_trick_rules.dart';
 import 'rules/eat_reds_rules.dart';
+import 'rules/eat_pairs_rules.dart';
 
 enum Action { newDeal, sameDeal, changeDraw, haveFun }
 
@@ -41,6 +42,8 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   CatTeRegion catTeRegion = CatTeRegion.khmer;
   // Persist selected EatReds player count between deals.
   int eatRedsPlayerCount = 2;
+  // Persist selected EatPairs player count between deals.
+  int eatPairsPlayerCount = 2;
 
   GameRules buildRules() {
     switch (rulesVariant) {
@@ -50,6 +53,8 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
         return CatTeTrickRules(region: catTeRegion);
       case RulesVariant.eatReds:
         return EatRedsRules(playerCount: eatRedsPlayerCount);
+      case RulesVariant.eatPairs:
+        return EatPairsRules(playerCount: eatPairsPlayerCount);
       case RulesVariant.klondike:
         return KlondikeRules();
     }
@@ -92,7 +97,7 @@ class KlondikeGame extends FlameGame<KlondikeWorld> {
   }
 }
 
-enum RulesVariant { klondike, catte, catteTrick, eatReds }
+enum RulesVariant { klondike, catte, catteTrick, eatReds, eatPairs }
 
 Sprite klondikeSprite(double x, double y, double width, double height) {
   debugPrint('klondikeSprite called with x: $x, y: $y, width: $width, height: $height');

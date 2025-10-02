@@ -207,5 +207,114 @@ Red face cards, 10s, and 9s: 10 points each
 All other red cards: Pip value
 The player with the highest score wins the game.
 
+## End of Eat Reds Instructions
+- --- IGNORE ---
+
+## Game: Eat Pairs (Also known as Siku in Khmer)
+- **Objective**: Be the first player to get rid of all cards by forming pairs of matching ranks.
+
+### Players
+- 2 to 6 players
+
+### Setup
+- Each player is dealt 7 cards from a standard 52-card deck
+- Dealer receives 8 cards (one extra)
+- Remaining cards form a face-down stock pile in the center
+- Players sit around a table in fixed positions
+
+### Initial Pair Laying
+Before active play begins, all players (including dealer) must lay down any pairs they have:
+- **Pair**: Two cards of the same rank (e.g., two 8s, two Queens) - lay both down
+- **Three of a Kind**: Lay down two cards, keep the third in hand
+- **Four of a Kind**: Lay down all four cards (counts as two pairs)
+- Laid pairs are placed face-up in the player's foundation pile
+
+### Game Flow - Critical Rule
+**ONLY the dealer plays ONE card from hand to start the game. After that, ALL cards come from stock draws.**
+
+### Gameplay Sequence
+
+#### Phase 1: Dealer's Opening Play
+1. **Dealer plays ONE card**: Dealer selects any card from their hand and plays it face-up to the waste pile (center)
+2. **Automatic matching**: Game checks all players in order for a matching rank
+3. **If match found**: 
+   - Matching player automatically pairs both cards to their foundation
+   - Matching player becomes the "lead player"
+   - Both cards are removed (dealer's played card + matching player's card)
+   - Lead player proceeds to Phase 2
+4. **If no match found**: 
+   - Dealer's card remains on waste pile
+   - Dealer becomes/remains lead player
+   - Dealer proceeds to Phase 2
+
+#### Phase 2: Stock Drawing Loop
+This phase continues until someone wins:
+
+1. **Lead player draws from stock**: Click/tap the stock pile to draw one card
+2. **Card appears on waste pile**: Drawn card is placed face-up on center waste pile
+3. **Automatic matching check**: Game checks all players in order for matching rank
+4. **If match found**:
+   - Matching player automatically pairs both cards to their foundation
+   - Matching player becomes the new lead player
+   - Return to step 1 (new lead player draws)
+5. **If no match found**:
+   - Drawn card remains on waste pile (may stack multiple unmatched cards)
+   - Lead player remains the same
+   - Return to step 1 (same lead player draws again)
+
+### Victory Condition
+- First player to empty their hand (zero cards remaining) wins immediately
+- This can happen either by:
+  - Matching the last card in hand with a drawn/played card
+  - Playing the last card (dealer only, if it's their opening play)
+
+### Key Rules Summary
+1. **One Hand Play Only**: Dealer plays exactly ONE card from hand to start, then never again
+2. **All From Stock**: After dealer's initial card, every subsequent card comes from stock draws
+3. **Automatic Matching**: When a card is played/drawn, the game automatically checks for matches
+4. **Lead Player Draws**: The player who just made a pair becomes lead and draws next
+5. **No Match = Keep Drawing**: If no one can match, lead player keeps drawing from stock
+6. **First to Empty Wins**: As soon as a player has zero cards, they win
+
+### Digital Implementation Notes
+- Uses Flame engine for Flutter with component-based architecture
+- Animated card dealing with round-robin distribution (like Eat Reds)
+- Layout:
+  - **Tableau piles** (bottom row): Player hands showing remaining cards
+  - **Foundation piles** (middle row): Paired cards for each player
+  - **Waste pile** (center top): Active card(s) waiting to be matched
+  - **Stock pile** (right): Draw pile for lead player
+- Visual feedback system:
+  - **Green border**: Selected card in hand
+  - **Status overlay**: Shows dealer, lead player, and current instructions
+  - **Play button**: Only enabled for dealer's first card or when matching
+- Automatic pair laying after initial deal animation completes
+- Automatic matching detection when cards are played/drawn
+- Hand count tracking for all players
+- Lead player management with turn-based drawing
+- `_dealerHasPlayedFirstCard` flag prevents multiple hand plays
+- `_awaitingMatch` flag set to false to allow continuous stock drawing when no matches exist
+
+### Game State Tracking
+- **Dealer Index**: Player 0, receives 8 cards, plays first
+- **Lead Player Index**: Current player who can draw from stock (changes after each successful match)
+- **Current Player Index**: Updates to lead player after matches
+- **Hand Counts**: Tracks remaining cards for each player
+- **Active Card**: Card currently on waste pile waiting to be matched
+- **Stock Cards Remaining**: Count of cards left in stock pile
+
+### Technical Architecture
+- **EatPairsRules**: Core game logic and rule enforcement
+- **EatPairsStatusOverlay**: Real-time game state display
+- **EatPairsPlayButton**: Button for dealer's first card and matching (future enhancement)
+- **Card Component**: Selection highlighting with green border for Eat Pairs
+- **Foundation/Tableau/Stock/Waste Piles**: Separate areas for different card states
+- **Animation System**: doMove() with speed, delays, and onComplete callbacks
+
+## End of Eat Pairs Instructions
+- --- IGNORE ---
+
+## Game: Klondike Solitaire
+- **Objective**: Move all cards to the foundation piles, sorted by suit from Ace to King.
 # Add additional games below using the same format.
 # klondike2

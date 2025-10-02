@@ -9,6 +9,7 @@ import 'components/card.dart';
 import 'components/eat_reds_add_to_layout_button.dart';
 import 'components/eat_reds_play_button.dart';
 import 'components/eat_reds_score_display.dart';
+import 'components/eat_pairs_play_button.dart';
 import 'components/flat_button.dart';
 import 'components/foundation_pile.dart';
 import 'components/stock_pile.dart';
@@ -20,9 +21,11 @@ import 'rules/game_rules.dart';
 import 'rules/klondike_rules.dart';
 import 'rules/catte_trick_rules.dart';
 import 'rules/eat_reds_rules.dart';
+import 'rules/eat_pairs_rules.dart';
 // highlight / overlay helpers
 import 'overlays/catte_trick_overlay.dart';
 import 'overlays/eat_reds_status_overlay.dart';
+import 'overlays/eat_pairs_status_overlay.dart';
 
 class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
   KlondikeWorld({GameRules? rules}) : rules = rules ?? KlondikeRules();
@@ -48,6 +51,9 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
   EatRedsPlayButton? _eatRedsPlayButton;
   EatRedsAddToLayoutButton? _eatRedsAddToLayoutButton;
   final List<EatRedsScoreDisplay> _eatRedsScoreDisplays = [];
+
+  // EatPairs UI components
+  EatPairsPlayButton? _eatPairsPlayButton;
 
   @override
   Future<void> onLoad() async {
@@ -136,6 +142,14 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       addEatRedsUIComponents(rules as EatRedsRules);
     }
 
+    // EatPairs player count button appears right after "Have Fun" when that ruleset is active
+    if (rules is EatPairsRules) {
+      final playerButtonX = gameMidX + (nextButtonOffset + 1) * cardSpaceWidth;
+      addEatPairsPlayerButton(playerButtonX, rules as EatPairsRules);
+      // Add Play and No Match buttons for EatPairs
+      addEatPairsUIComponents(rules as EatPairsRules);
+    }
+
     // CatTe trick action buttons (Play / Fold) appear when that ruleset active.
     if (rules is CatTeTrickRules) {
       // Place after existing buttons (3 for CatTeTrick, 4 if Klondike draw toggle present when switching variants dynamically).
@@ -159,6 +173,13 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     // Add overlay components for Eat Reds rules (player scores and status)
     if (rules is EatRedsRules) {
       add(EatRedsStatusOverlay(rules as EatRedsRules));
+    }
+
+    // Add overlay components for Eat Pairs rules (player hand counts and status)
+    if (rules is EatPairsRules) {
+      add(EatPairsStatusOverlay(rules as EatPairsRules));
+      // Lay down initial pairs after dealing
+      (rules as EatPairsRules).layDownInitialPairs(tableauPiles, foundations);
     }
   }
 
@@ -398,6 +419,50 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
     );
   }
 
+  void addEatPairsPlayerButton(double buttonX, EatPairsRules rules) {
+    final label = '${rules.playerCount} Players';
+    debugPrint('Adding EatPairs player count button: $label at $buttonX');
+    final button = FlatButton(
+      label,
+      size: Vector2(KlondikeGame.cardWidth, 0.6 * topGap),
+      position: Vector2(buttonX, topGap / 2),
+      onReleased: () {
+        // Cycle through player counts 2-6
+        final current = rules.playerCount;
+        final next = current >= 6 ? 2 : current + 1;
+        rules.setPlayerCount(next);
+        // Save to game object for persistence
+        game.eatPairsPlayerCount = next;
+        debugPrint('Changed EatPairs players: $current -> $next');
+        // Trigger new deal to apply player count change
+        game.action = Action.newDeal;
+        game.rebuildWorld();
+      },
+    );
+    add(button);
+    _controlButtons.add(button);
+  }
+
+  void addEatPairsUIComponents(EatPairsRules rules) {
+    // Clear existing EatPairs UI components
+    if (_eatPairsPlayButton != null) {
+      remove(_eatPairsPlayButton!);
+      _eatPairsPlayButton = null;
+    }
+
+    // Add Play button to the left of the waste pile (active card area)
+    // Waste pile is centered at 2.5 * cardSpaceWidth from EatPairsRules
+    final wasteCenterX = 2.5 * cardSpaceWidth + cardGap;
+    final wasteCenterY = topGap;
+    final playButtonPos = Vector2(wasteCenterX - 2.0 * cardSpaceWidth - cardGap, wasteCenterY);
+    _eatPairsPlayButton = EatPairsPlayButton(position: playButtonPos);
+    add(_eatPairsPlayButton!);
+
+    debugPrint(
+      'Added EatPairs UI components: Play button at (${playButtonPos.x}, ${playButtonPos.y})',
+    );
+  }
+
   void addRulesToggleButton(double buttonX) {
     String labelFor(RulesVariant v) {
       switch (v) {
@@ -409,6 +474,8 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
           return 'CatTe Trick';
         case RulesVariant.eatReds:
           return 'Eat Reds';
+        case RulesVariant.eatPairs:
+          return 'Eat Pairs';
       }
     }
 
@@ -557,6 +624,8 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
   void onRemove() {
     // Clean up EatReds UI components when world is removed
     cleanupEatRedsUIComponents();
+    // Clean up EatPairs UI components when world is removed
+    cleanupEatPairsUIComponents();
     super.onRemove();
   }
 
@@ -573,6 +642,13 @@ class KlondikeWorld extends World with HasGameReference<KlondikeGame> {
       remove(scoreDisplay);
     }
     _eatRedsScoreDisplays.clear();
+  }
+
+  void cleanupEatPairsUIComponents() {
+    if (_eatPairsPlayButton != null) {
+      remove(_eatPairsPlayButton!);
+      _eatPairsPlayButton = null;
+    }
   }
 }
 

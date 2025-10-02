@@ -9,6 +9,7 @@ import 'card.dart';
 import '../rules/catte_rules.dart';
 import '../rules/catte_trick_rules.dart';
 import '../rules/eat_reds_rules.dart';
+import '../rules/eat_pairs_rules.dart';
 
 class TableauPile extends PositionComponent with HasGameReference<KlondikeGame> implements Pile {
   TableauPile({super.position}) : super(size: KlondikeGame.cardSize) {
@@ -62,8 +63,10 @@ class TableauPile extends PositionComponent with HasGameReference<KlondikeGame> 
   void removeCard(Card card, MoveMethod method) {
     // In CatTe trick mode a card may be removed after being intentionally folded
     // face-down. So only enforce face-up invariant for Klondike (stacking) mode.
-    // EatReds also allows individual card selection without moving stacked cards.
-    if (game.rules is! CatTeTrickRules && game.rules is! EatRedsRules) {
+    // EatReds and EatPairs also allow individual card selection without moving stacked cards.
+    if (game.rules is! CatTeTrickRules &&
+        game.rules is! EatRedsRules &&
+        game.rules is! EatPairsRules) {
       assert(_cards.contains(card) && card.isFaceUp);
     } else {
       assert(_cards.contains(card));
@@ -71,8 +74,11 @@ class TableauPile extends PositionComponent with HasGameReference<KlondikeGame> 
     debugPrint('removeCard called for card: $card, method: $method');
     final index = _cards.indexOf(card);
 
-    // CatTe variants and EatReds: allow plucking a single interior card without taking the stack above it.
-    if (game.rules is CatTeRules || game.rules is CatTeTrickRules || game.rules is EatRedsRules) {
+    // CatTe variants, EatReds, and EatPairs: allow plucking a single interior card without taking the stack above it.
+    if (game.rules is CatTeRules ||
+        game.rules is CatTeTrickRules ||
+        game.rules is EatRedsRules ||
+        game.rules is EatPairsRules) {
       _cards.removeAt(index);
       // Reassign priorities to maintain stable ordering.
       for (var i = 0; i < _cards.length; i++) {
