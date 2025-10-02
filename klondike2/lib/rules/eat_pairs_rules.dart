@@ -18,9 +18,10 @@ import 'game_rules.dart';
 /// Objective: Be the first player to get rid of all cards by forming pairs by rank.
 ///
 /// Game Flow:
-/// 1. Deal 7 cards to each player (dealer gets 8)
+/// 1. Deal cards to each player (2-4 players: dealer gets 8, others get 7)
+///    (5-6 players: dealer gets 5, others get 4 - leaves more stock)
 /// 2. Players immediately lay down any pairs they have
-/// 3. Dealer (with 8 cards) plays ONE card from hand to start the game
+/// 3. Dealer plays ONE card from hand to start the game
 /// 4. Other players race to match the rank - first to match wins both cards
 /// 5. Matching player becomes the "lead player" and draws from stock
 /// 6. Drawn card is offered to players in order - first match wins both cards
@@ -655,14 +656,27 @@ class EatPairsRules implements GameRules {
       _handCounts.add(0);
     }
 
-    // Deal cards: 7 to each player, dealer gets 8
+    // Deal cards based on player count:
+    // 2-4 players: dealer gets 8 cards, others get 7
+    // 5-6 players: dealer gets 5 cards, others get 4 (leaves more stock for longer games)
     // For simplicity, player 0 is the dealer
     _dealerIndex = 0;
     _currentPlayerIndex = _dealerIndex;
     _leadPlayerIndex = _dealerIndex; // Dealer starts as the lead player (can play first)
 
+    int dealerCards;
+    int otherPlayersCards;
+    if (_playerCount >= 2 && _playerCount <= 4) {
+      dealerCards = 8;
+      otherPlayersCards = 7;
+    } else {
+      // 5-6 players: reduced cards to ensure more stock remains
+      dealerCards = 5;
+      otherPlayersCards = 4;
+    }
+
     // Calculate total cards to deal to players
-    int totalPlayerCards = (_playerCount - 1) * 7 + 8; // 7 per player, dealer gets 8
+    int totalPlayerCards = (_playerCount - 1) * otherPlayersCards + dealerCards;
     int dealIndex = 0;
     int remaining = totalPlayerCards;
 
@@ -677,11 +691,11 @@ class EatPairsRules implements GameRules {
     }
 
     // Deal cards to players in round-robin style (animated like Eat Reds)
-    int maxCards = 8; // Dealer gets 8, others get 7
+    int maxCards = dealerCards; // Dealer gets the most cards
     for (var round = 0; round < maxCards; round++) {
       for (var player = 0; player < _playerCount; player++) {
-        // Dealer gets 8 cards, others get 7
-        final cardsForThisPlayer = (player == _dealerIndex) ? 8 : 7;
+        // Dealer gets more cards than other players
+        final cardsForThisPlayer = (player == _dealerIndex) ? dealerCards : otherPlayersCards;
         if (round < cardsForThisPlayer) {
           final cardIndex = dealIndex;
           if (cardIndex < deck.length && cardIndex < totalPlayerCards) {
